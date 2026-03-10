@@ -1,0 +1,2895 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ALPHA CLEANING · ERP</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<style>
+:root {
+  --bg:#0f0f0f; --surface:#181818; --surface2:#222; --surface3:#1c1c1c;
+  --border:#2e2e2e; --border2:#3a3a3a;
+  --accent:#e8ff47; --accent2:#47c8ff; --accent3:#ff6b47;
+  --text:#f0f0f0; --text2:#888; --text3:#555;
+  --green:#4dff91; --orange:#ffb347; --red:#ff5757; --purple:#c084fc;
+  --r:4px;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--bg);color:var(--text);font-family:'IBM Plex Sans',sans-serif;font-size:14px;min-height:100vh;}
+
+/* ── LOGIN ── */
+#login-screen{display:flex;align-items:center;justify-content:center;min-height:100vh;background:var(--bg);}
+.login-wrap{width:420px;}
+.login-logo{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--text3);letter-spacing:3px;text-transform:uppercase;margin-bottom:6px;}
+.login-title{font-family:'IBM Plex Mono',monospace;font-size:26px;font-weight:600;color:var(--accent);margin-bottom:4px;}
+.login-sub{font-size:13px;color:var(--text2);margin-bottom:32px;}
+.login-box{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:32px;}
+.lf{margin-bottom:16px;}
+.lf label{display:block;font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--text3);letter-spacing:1px;text-transform:uppercase;margin-bottom:6px;}
+.lf input{width:100%;background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:10px 12px;border-radius:var(--r);font-family:'IBM Plex Sans',sans-serif;font-size:13px;outline:none;transition:border-color .2s;}
+.lf input:focus{border-color:var(--accent);}
+.login-btn{width:100%;padding:12px;background:var(--accent);color:#000;border:none;border-radius:var(--r);font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:600;cursor:pointer;letter-spacing:1px;transition:all .2s;margin-top:8px;}
+.login-btn:hover{background:#d4eb30;transform:translateY(-1px);}
+.login-err{color:var(--red);font-size:12px;text-align:center;margin-top:10px;display:none;}
+.login-hints{margin-top:24px;padding-top:20px;border-top:1px solid var(--border);}
+.lh-title{font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--text3);letter-spacing:2px;text-transform:uppercase;margin-bottom:8px;}
+.lh-row{display:flex;justify-content:space-between;padding:5px 0;font-size:12px;color:var(--text2);border-bottom:1px solid var(--border);}
+.lh-row:last-child{border-bottom:none;}
+.lh-row span:last-child{font-family:'IBM Plex Mono',monospace;color:var(--text3);font-size:11px;}
+
+/* ── APP LAYOUT ── */
+#app{display:none;}
+.layout{display:grid;grid-template-columns:260px 1fr;min-height:100vh;}
+
+/* ── SIDEBAR ── */
+.sidebar{background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;position:sticky;top:0;height:100vh;overflow:hidden;}
+.sb-top{padding:20px 16px 14px;border-bottom:1px solid var(--border);}
+.sb-brand{font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--text3);letter-spacing:2px;text-transform:uppercase;}
+.sb-title{font-family:'IBM Plex Mono',monospace;font-size:15px;font-weight:600;color:var(--accent);margin-top:2px;}
+.sb-user{padding:10px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;}
+.sb-av{width:28px;height:28px;border-radius:50%;background:var(--accent);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#000;flex-shrink:0;font-family:'IBM Plex Mono',monospace;}
+.sb-uname{font-size:12px;color:var(--text);font-weight:500;}
+.sb-urole{font-size:10px;color:var(--text3);font-family:'IBM Plex Mono',monospace;}
+.sb-search{padding:10px 12px;border-bottom:1px solid var(--border);}
+.sb-search input{width:100%;background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:7px 10px;border-radius:var(--r);font-family:'IBM Plex Sans',sans-serif;font-size:12px;outline:none;}
+.sb-search input:focus{border-color:var(--accent);}
+.sb-search input::placeholder{color:var(--text3);}
+.sb-nav{flex:1;overflow-y:auto;padding:8px 0;}
+.sb-section{font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--text3);letter-spacing:2px;padding:10px 16px 4px;text-transform:uppercase;}
+.nav-item{display:flex;align-items:center;gap:10px;padding:8px 16px;cursor:pointer;color:var(--text2);transition:all .15s;border-left:2px solid transparent;font-size:13px;}
+.nav-item:hover{background:var(--surface2);color:var(--text);}
+.nav-item.active{color:var(--accent);border-left-color:var(--accent);background:rgba(232,255,71,0.05);}
+.nav-icon{font-size:15px;flex-shrink:0;}
+.nav-badge{margin-left:auto;font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--accent);}
+.sb-footer{padding:12px 16px;border-top:1px solid var(--border);}
+.sb-stats{margin-bottom:10px;}
+.sb-stat-row{display:flex;justify-content:space-between;padding:2px 0;}
+.sb-stat-l{font-size:10px;color:var(--text3);font-family:'IBM Plex Mono',monospace;}
+.sb-stat-v{font-size:10px;color:var(--accent);font-family:'IBM Plex Mono',monospace;font-weight:600;}
+.logout-btn{background:none;border:none;color:var(--text3);font-family:'IBM Plex Mono',monospace;font-size:10px;cursor:pointer;letter-spacing:1px;transition:color .15s;}
+.logout-btn:hover{color:var(--red);}
+
+/* ── MAIN ── */
+.main{overflow-y:auto;min-height:100vh;}
+.page{display:none;padding:32px;animation:fadeIn .2s ease;}
+.page.active{display:block;}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+
+/* ── PAGE HEADER ── */
+.ph{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:28px;gap:16px;flex-wrap:wrap;}
+.ph-title{font-family:'IBM Plex Mono',monospace;font-size:20px;font-weight:600;color:var(--text);}
+.ph-sub{font-size:13px;color:var(--text2);margin-top:4px;}
+.ph-right{display:flex;gap:8px;align-items:center;flex-wrap:wrap;}
+
+/* ── BUTTONS ── */
+.btn{background:var(--accent);color:#000;padding:8px 16px;border:none;border-radius:var(--r);font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:600;cursor:pointer;letter-spacing:.5px;transition:all .15s;display:inline-flex;align-items:center;gap:6px;white-space:nowrap;}
+.btn:hover{background:#d4eb30;transform:translateY(-1px);}
+.btn-ghost{background:transparent;color:var(--text2);border:1px solid var(--border);}
+.btn-ghost:hover{color:var(--text);border-color:var(--border2);background:transparent;transform:none;}
+.btn-red{background:rgba(255,87,87,.15);color:var(--red);border:1px solid rgba(255,87,87,.2);}
+.btn-red:hover{background:var(--red);color:#fff;transform:none;}
+.btn-sm{padding:5px 10px;font-size:10px;}
+.btn-blue{background:rgba(71,200,255,.12);color:var(--accent2);border:1px solid rgba(71,200,255,.2);}
+.btn-blue:hover{background:var(--accent2);color:#000;transform:none;}
+
+/* ── BADGES ── */
+.badge{display:inline-flex;align-items:center;padding:2px 7px;border-radius:2px;font-size:10px;font-family:'IBM Plex Mono',monospace;font-weight:600;letter-spacing:.3px;}
+.b-green{background:rgba(77,255,145,.1);color:var(--green);border:1px solid rgba(77,255,145,.2);}
+.b-blue{background:rgba(71,200,255,.1);color:var(--accent2);border:1px solid rgba(71,200,255,.2);}
+.b-orange{background:rgba(255,179,71,.1);color:var(--orange);border:1px solid rgba(255,179,71,.2);}
+.b-red{background:rgba(255,87,87,.1);color:var(--red);border:1px solid rgba(255,87,87,.2);}
+.b-yellow{background:rgba(232,255,71,.1);color:var(--accent);border:1px solid rgba(232,255,71,.2);}
+.b-purple{background:rgba(192,132,252,.1);color:var(--purple);border:1px solid rgba(192,132,252,.2);}
+.b-gray{background:rgba(255,255,255,.05);color:var(--text2);border:1px solid var(--border);}
+
+/* ── STAT CARDS ── */
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:14px;margin-bottom:28px;}
+.sc{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:18px;position:relative;overflow:hidden;}
+.sc::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--accent);}
+.sc.c-blue::before{background:var(--accent2);}
+.sc.c-green::before{background:var(--green);}
+.sc.c-orange::before{background:var(--orange);}
+.sc.c-red::before{background:var(--red);}
+.sc.c-purple::before{background:var(--purple);}
+.sc-num{font-family:'IBM Plex Mono',monospace;font-size:26px;font-weight:600;color:var(--text);line-height:1;}
+.sc-label{font-size:11px;color:var(--text2);margin-top:5px;}
+.sc-delta{display:inline-flex;align-items:center;gap:3px;font-family:'IBM Plex Mono',monospace;font-size:10px;margin-top:6px;padding:2px 6px;border-radius:2px;}
+.sc-delta.up{background:rgba(77,255,145,.1);color:var(--green);}
+.sc-delta.dn{background:rgba(255,87,87,.1);color:var(--red);}
+.sc-delta.eq{background:rgba(255,255,255,.05);color:var(--text3);}
+.sc-icon{position:absolute;right:14px;top:14px;font-size:20px;opacity:.15;}
+
+/* ── SECTION LABEL ── */
+.slabel{font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--text3);letter-spacing:2px;text-transform:uppercase;margin-bottom:12px;display:flex;align-items:center;gap:8px;}
+.slabel::after{content:'';flex:1;height:1px;background:var(--border);}
+
+/* ── OBJECT CARDS ── */
+.obj-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:14px;}
+.obj-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:18px;cursor:pointer;transition:all .2s;}
+.obj-card:hover{border-color:var(--accent);transform:translateY(-2px);box-shadow:0 8px 28px rgba(0,0,0,.5);}
+.oc-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;}
+.oc-name{font-weight:600;font-size:13px;color:var(--text);line-height:1.3;}
+.oc-addr{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--text3);margin-top:3px;}
+.oc-badges{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0;}
+.oc-desc{font-size:12px;color:var(--text3);line-height:1.5;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;margin-bottom:10px;}
+.oc-footer{display:flex;justify-content:space-between;padding-top:10px;border-top:1px solid var(--border);font-size:11px;color:var(--text3);}
+
+/* ── FILTERS ── */
+.filter-bar{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:18px;}
+.fc{padding:5px 12px;border:1px solid var(--border);border-radius:20px;background:transparent;color:var(--text2);font-size:11px;cursor:pointer;transition:all .15s;font-family:'IBM Plex Sans',sans-serif;}
+.fc:hover,.fc.active{background:var(--accent);color:#000;border-color:var(--accent);}
+
+/* ── ACCORDION ── */
+.accordion{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);margin-bottom:8px;overflow:hidden;}
+.acc-hd{display:flex;align-items:center;gap:12px;padding:13px 18px;cursor:pointer;transition:background .15s;user-select:none;}
+.acc-hd:hover{background:var(--surface2);}
+.acc-plus{width:22px;height:22px;border-radius:50%;background:var(--surface2);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:14px;color:var(--text3);transition:all .2s;flex-shrink:0;font-family:'IBM Plex Mono',monospace;}
+.acc-plus.open{background:var(--accent);color:#000;border-color:var(--accent);transform:rotate(45deg);}
+.acc-title{font-weight:600;font-size:13px;color:var(--text);flex:1;}
+.acc-meta{display:flex;gap:6px;align-items:center;}
+.acc-body{display:none;border-top:1px solid var(--border);}
+.acc-body.open{display:block;}
+
+/* ── TABLE ── */
+.t-wrap{overflow:hidden;}
+table{width:100%;border-collapse:collapse;}
+th{background:var(--surface2);padding:8px 14px;text-align:left;font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--text3);letter-spacing:1px;text-transform:uppercase;border-bottom:1px solid var(--border);}
+td{padding:10px 14px;border-bottom:1px solid var(--border);font-size:12px;color:var(--text2);vertical-align:middle;}
+tr:last-child td{border-bottom:none;}
+tr:hover td{background:rgba(255,255,255,.02);}
+td .tcell{font-weight:600;color:var(--text);font-size:13px;}
+td .tmono{font-family:'IBM Plex Mono',monospace;font-size:11px;}
+
+/* ── DETAIL ── */
+.dv-wrap{display:none;}
+.dv-wrap.open{display:block;}
+.lv-wrap.hidden{display:none;}
+.back-btn{display:inline-flex;align-items:center;gap:6px;color:var(--text2);cursor:pointer;margin-bottom:20px;font-size:12px;background:none;border:none;font-family:'IBM Plex Sans',sans-serif;transition:color .15s;}
+.back-btn:hover{color:var(--accent);}
+.dv-header{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:22px;margin-bottom:16px;}
+.dv-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;}
+.info-block{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;}
+.ib-title{background:var(--surface2);padding:8px 14px;font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--text3);letter-spacing:1.5px;text-transform:uppercase;border-bottom:1px solid var(--border);}
+.ib-row{display:flex;justify-content:space-between;align-items:flex-start;padding:9px 14px;border-bottom:1px solid var(--border);}
+.ib-row:last-child{border-bottom:none;}
+.ib-l{font-size:11px;color:var(--text3);}
+.ib-v{font-size:12px;color:var(--text);font-weight:500;text-align:right;max-width:55%;}
+
+/* ── MONTH SELECTOR ── */
+.month-sel{display:flex;align-items:center;gap:8px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:6px 10px;}
+.month-sel select{border:none;background:transparent;font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--text);outline:none;cursor:pointer;}
+.month-sel select option{background:var(--surface2);}
+.month-lbl{font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--text3);letter-spacing:1px;text-transform:uppercase;}
+
+/* ── TABS ── */
+.tabs{display:flex;border-bottom:1px solid var(--border);margin-bottom:20px;}
+.tab{padding:9px 16px;cursor:pointer;font-size:12px;color:var(--text2);border-bottom:2px solid transparent;margin-bottom:-1px;transition:all .15s;}
+.tab:hover{color:var(--text);}
+.tab.active{color:var(--accent);border-bottom-color:var(--accent);}
+.tp{display:none;}
+.tp.active{display:block;}
+
+/* ── SPARKLINE ── */
+.spark{display:flex;align-items:flex-end;gap:3px;height:36px;}
+.spark-b{flex:1;background:var(--border);border-radius:2px;min-width:4px;transition:height .4s;}
+.spark-b.hi{background:var(--accent);}
+
+/* ── FIN GRID ── */
+.fin-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:20px;}
+.fin-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:16px;}
+.fin-card-title{font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--text3);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:14px;}
+.chart-row{display:flex;align-items:center;gap:10px;margin-bottom:8px;}
+.chart-label{font-size:11px;color:var(--text2);width:130px;flex-shrink:0;text-align:right;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.chart-track{flex:1;height:6px;background:var(--surface2);border-radius:3px;overflow:hidden;}
+.chart-fill{height:100%;border-radius:3px;transition:width .6s;}
+.chart-val{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--text2);width:60px;flex-shrink:0;}
+.margin-bar{display:flex;align-items:center;gap:10px;background:var(--surface2);border-radius:var(--r);padding:12px 16px;margin-top:12px;}
+.margin-pct{font-family:'IBM Plex Mono',monospace;font-size:22px;font-weight:600;}
+
+/* ── DASHBOARD NEW ── */
+.dash-section-label{font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--accent);letter-spacing:2px;text-transform:uppercase;margin-bottom:12px;margin-top:4px;padding-bottom:6px;border-bottom:1px solid rgba(232,255,71,.2);}
+.donut-row{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:14px;}
+.donut-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:16px;display:flex;flex-direction:column;align-items:center;}
+.donut-title{font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--text3);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:12px;text-align:center;}
+.donut-wrap{position:relative;width:110px;height:110px;margin-bottom:14px;}
+.donut-wrap svg{width:110px;height:110px;transform:rotate(-90deg);}
+.donut-center{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;pointer-events:none;}
+.donut-center-num{font-family:'IBM Plex Mono',monospace;font-size:22px;font-weight:600;color:var(--text);line-height:1;}
+.donut-center-lbl{font-size:9px;color:var(--text3);margin-top:2px;}
+.donut-legend{width:100%;display:flex;flex-direction:column;gap:5px;}
+.donut-leg-row{display:flex;align-items:center;gap:7px;font-size:11px;color:var(--text2);cursor:default;padding:3px 6px;border-radius:3px;transition:background .15s;}
+.donut-leg-row:hover{background:var(--surface2);}
+.donut-leg-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+.donut-leg-val{margin-left:auto;font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--text3);}
+/* Mini charts row */
+.mini-charts-row{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;}
+.mini-chart-block{display:flex;flex-direction:column;gap:6px;}
+.mini-chart-label{font-size:10px;color:var(--text2);display:flex;align-items:center;gap:6px;}
+.mini-chart-label-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+.mini-chart-bars{display:flex;align-items:flex-end;gap:3px;height:60px;border-bottom:1px solid var(--border);padding-bottom:2px;}
+.mini-chart-bar{flex:1;border-radius:2px 2px 0 0;min-height:2px;transition:height .3s;}
+.mini-chart-xlabels{display:flex;gap:3px;}
+.mini-chart-xlabels span{flex:1;font-size:8px;color:var(--text3);text-align:center;font-family:'IBM Plex Mono',monospace;overflow:hidden;}
+/* OKK bars */
+.okk-bar-row{display:flex;align-items:center;gap:8px;margin-bottom:9px;}
+.okk-bar-name{font-size:11px;color:var(--text2);width:110px;flex-shrink:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.okk-bar-track{flex:1;height:7px;background:var(--surface2);border-radius:4px;overflow:hidden;}
+.okk-bar-fill{height:100%;border-radius:4px;transition:width .5s;}
+.okk-bar-score{font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:600;width:32px;flex-shrink:0;text-align:right;}
+.okk-bar-mgr{font-size:9px;color:var(--text3);margin-top:1px;}
+
+/* ── SVG LINE CHARTS ── */
+.linechart-wrap{position:relative;width:100%;}
+.linechart-wrap svg{width:100%;overflow:visible;}
+.linechart-tooltip{position:fixed;background:var(--surface2);border:1px solid var(--border2);border-radius:4px;padding:6px 10px;font-size:11px;font-family:'IBM Plex Mono',monospace;color:var(--text);pointer-events:none;z-index:9999;display:none;white-space:nowrap;}
+.linechart-legend{display:flex;gap:14px;margin-bottom:10px;flex-wrap:wrap;}
+.linechart-leg-item{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text2);}
+.linechart-leg-dot{width:8px;height:8px;border-radius:50%;}
+
+
+/* ── SALARY CARDS ── */
+.sal-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:12px;}
+.sal-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:14px;}
+.sal-name{font-weight:600;font-size:13px;color:var(--text);margin-bottom:2px;}
+.sal-obj{font-size:10px;color:var(--text3);font-family:'IBM Plex Mono',monospace;margin-bottom:10px;}
+.sal-row{display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid var(--border);font-size:12px;color:var(--text2);}
+.sal-row:last-child{border-bottom:none;font-weight:700;color:var(--text);}
+.sal-total{font-family:'IBM Plex Mono',monospace;font-size:13px;color:var(--accent);}
+
+/* ── PROC ── */
+.proc-cat{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);margin-bottom:10px;overflow:hidden;}
+.pc-hd{display:flex;justify-content:space-between;align-items:center;padding:12px 16px;background:var(--surface2);border-bottom:1px solid var(--border);}
+.pc-name{font-weight:600;font-size:13px;color:var(--text);}
+.pc-total{font-family:'IBM Plex Mono',monospace;font-size:13px;color:var(--orange);}
+
+/* ── MODAL ── */
+.modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:200;align-items:center;justify-content:center;backdrop-filter:blur(3px);}
+.modal-bg.open{display:flex;}
+.modal{background:var(--surface);border:1px solid var(--border2);border-radius:var(--r);padding:28px;width:560px;max-width:95vw;max-height:90vh;overflow-y:auto;}
+.modal-title{font-family:'IBM Plex Mono',monospace;font-size:14px;font-weight:600;margin-bottom:22px;color:var(--accent);}
+.modal-footer{display:flex;gap:8px;justify-content:flex-end;margin-top:20px;padding-top:16px;border-top:1px solid var(--border);}
+.fg{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+.fgroup{display:flex;flex-direction:column;gap:5px;}
+.fgroup.full{grid-column:1/-1;}
+label{font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--text3);letter-spacing:1px;text-transform:uppercase;}
+input,select,textarea{background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:8px 10px;border-radius:var(--r);font-family:'IBM Plex Sans',sans-serif;font-size:13px;outline:none;width:100%;transition:border-color .2s;}
+input:focus,select:focus,textarea:focus{border-color:var(--accent);}
+textarea{resize:vertical;min-height:70px;}
+select option{background:var(--surface2);}
+
+/* ── MAP ── */
+.map-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:10px;}
+.map-pin{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:12px;display:flex;gap:10px;cursor:pointer;transition:border-color .15s;}
+.map-pin:hover{border-color:var(--accent2);}
+.pin-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0;margin-top:4px;}
+
+/* ── EMPTY ── */
+.empty{text-align:center;padding:52px 24px;color:var(--text3);}
+.empty-ico{font-size:36px;margin-bottom:10px;opacity:.3;}
+
+/* ── SCROLLBAR ── */
+::-webkit-scrollbar{width:5px;}
+::-webkit-scrollbar-track{background:transparent;}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px;}
+
+/* ── ROLE INDICATOR ── */
+.role-tag{display:inline-flex;align-items:center;gap:5px;font-family:'IBM Plex Mono',monospace;font-size:9px;padding:2px 7px;border-radius:2px;}
+.rt-director{background:rgba(232,255,71,.1);color:var(--accent);border:1px solid rgba(232,255,71,.2);}
+.rt-manager{background:rgba(71,200,255,.1);color:var(--accent2);border:1px solid rgba(71,200,255,.2);}
+.rt-recruiter{background:rgba(192,132,252,.1);color:var(--purple);border:1px solid rgba(192,132,252,.2);}
+.rt-purchaser{background:rgba(255,179,71,.1);color:var(--orange);border:1px solid rgba(255,179,71,.2);}
+.rt-guest{background:rgba(255,255,255,.05);color:var(--text2);border:1px solid var(--border);}
+
+/* ── KNOWLEDGE BASE ── */
+.kb-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px;}
+.kb-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:16px;cursor:pointer;transition:all .2s;display:flex;flex-direction:column;gap:10px;}
+.kb-card:hover{border-color:var(--accent2);transform:translateY(-2px);}
+.kb-card-top{display:flex;align-items:flex-start;gap:10px;}
+.kb-icon{width:36px;height:36px;border-radius:var(--r);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;}
+.kb-icon.doc{background:rgba(71,200,255,.1);}
+.kb-icon.vid{background:rgba(255,87,87,.1);}
+.kb-icon.img{background:rgba(77,255,145,.1);}
+.kb-icon.lnk{background:rgba(232,255,71,.1);}
+.kb-title{font-weight:600;font-size:13px;color:var(--text);line-height:1.3;}
+.kb-desc{font-size:11px;color:var(--text3);line-height:1.5;}
+.kb-footer{display:flex;justify-content:space-between;align-items:center;padding-top:8px;border-top:1px solid var(--border);}
+.kb-cat-tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:18px;}
+
+/* ── SUPPLIERS ── */
+.sup-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px;}
+.sup-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:14px;}
+.sup-num{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--text3);margin-bottom:4px;}
+.sup-name{font-weight:700;font-size:14px;color:var(--text);margin-bottom:6px;}
+.sup-row{display:flex;gap:6px;align-items:center;padding:3px 0;font-size:12px;color:var(--text2);}
+.sup-row .sup-ico{font-size:11px;width:14px;flex-shrink:0;}
+
+/* ── BULK SALARY ── */
+.bulk-table{width:100%;border-collapse:collapse;}
+.bulk-table th{background:var(--surface2);padding:8px 10px;text-align:left;font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--text3);letter-spacing:1px;text-transform:uppercase;border-bottom:1px solid var(--border);}
+.bulk-table td{padding:6px 10px;border-bottom:1px solid var(--border);vertical-align:middle;}
+.bulk-table tr:last-child td{border-bottom:none;}
+.bulk-input{background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:5px 8px;border-radius:var(--r);font-family:'IBM Plex Mono',monospace;font-size:12px;width:80px;text-align:center;}
+.bulk-input:focus{border-color:var(--accent);outline:none;}
+
+/* ── YANDEX MAP ── */
+#ymap{width:100%;height:420px;border-radius:var(--r);border:1px solid var(--border);overflow:hidden;background:var(--surface2);}
+.ymap-placeholder{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;color:var(--text3);}
+.ymap-placeholder .ymap-ico{font-size:40px;opacity:.2;margin-bottom:10px;}
+</style>
+</head>
+<body>
+
+<!-- ═══ LOGIN ═══ -->
+<div id="login-screen">
+<div class="login-wrap">
+  <div class="login-logo">Alpha Cleaning · ERP система</div>
+  <div class="login-title">ALPHA CLEANING</div>
+  <div class="login-sub">Войдите для продолжения</div>
+  <div class="login-box">
+    <div class="lf"><label>Логин</label><input id="li-u" placeholder="Введите логин" autocomplete="username"></div>
+    <div class="lf"><label>Пароль</label><input id="li-p" type="password" placeholder="Введите пароль" autocomplete="current-password"></div>
+    <button class="login-btn" onclick="doLogin()">ВОЙТИ →</button>
+    <div class="login-err" id="login-err">Неверный логин или пароль</div>
+    <div class="login-hints" style="display:none" id="demo-hints">
+      <div class="lh-title">Демо-доступы</div>
+      <div class="lh-row"><span>Директор</span><span>director / dir2024</span></div>
+      <div class="lh-row"><span>Менеджер</span><span>manager / mgr2024</span></div>
+      <div class="lh-row"><span>Менеджер ОКК</span><span>okk / okk2024</span></div>
+      <div class="lh-row"><span>Рекрутер</span><span>recruiter / rec2024</span></div>
+      <div class="lh-row"><span>Закупщик</span><span>purchaser / pur2024</span></div>
+      <div class="lh-row"><span>Гость</span><span>guest / guest123</span></div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ═══ APP ═══ -->
+<div id="app">
+<div class="layout">
+
+<aside class="sidebar">
+  <div class="sb-top">
+  <div class="sb-brand">Alpha Cleaning · ERP система</div>
+  <div class="sb-title" style="color:var(--accent2)">ALPHA CLEANING</div>
+  </div>
+  <div class="sb-user">
+    <div class="sb-av" id="sb-av">—</div>
+    <div><div class="sb-uname" id="sb-uname">—</div><div class="sb-urole" id="sb-urole">—</div></div>
+  </div>
+  <div class="sb-search"><input placeholder="🔍 Поиск по базе..." oninput="globalSearch(this.value)" id="sb-search-inp"></div>
+  <nav class="sb-nav" id="sb-nav"></nav>
+  <div class="sb-footer">
+    <div class="sb-stats" id="sb-stats"></div>
+    <button class="logout-btn" onclick="doLogout()">⎋ ВЫЙТИ</button>
+  </div>
+</aside>
+
+<main class="main">
+
+  <!-- ══ DASHBOARD ══ -->
+  <div class="page" id="page-dashboard">
+    <div class="ph">
+      <div><div class="ph-title">Дашборд</div><div class="ph-sub" id="dash-period">—</div></div>
+      <div class="ph-right">
+        <div class="month-sel"><span class="month-lbl">Период</span><select id="dash-month" onchange="renderDashboard()"></select></div>
+      </div>
+    </div>
+
+    <!-- ── Все роли ── -->
+    <div class="dash-section-label">Общие показатели</div>
+
+    <!-- 3 donut charts -->
+    <div class="donut-row" id="dash-donuts"></div>
+
+    <!-- OKK smooth line charts -->
+    <div class="fin-card" style="margin-bottom:14px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+        <div class="fin-card-title" style="margin-bottom:0">Динамика за год</div>
+        <select id="dash-okk-year" onchange="renderDashboard()" style="background:var(--surface2);border:1px solid var(--border);color:var(--text2);padding:4px 8px;border-radius:var(--r);font-size:11px;font-family:'IBM Plex Mono',monospace;outline:none;"></select>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px" id="dash-okk-linecharts"></div>
+    </div>
+
+    <!-- Top/bottom bars -->
+    <div class="fin-grid" style="margin-bottom:14px">
+      <div class="fin-card">
+        <div class="fin-card-title" style="color:var(--red)">🔴 Худшие объекты · ОКК</div>
+        <div id="dash-worst-bars"></div>
+      </div>
+      <div class="fin-card">
+        <div class="fin-card-title" style="color:var(--green)">🟢 Лучшие объекты · ОКК</div>
+        <div id="dash-best-bars"></div>
+      </div>
+    </div>
+
+    <!-- Director block -->
+    <div id="dash-fin-block" style="display:none">
+      <div class="dash-section-label">Финансы · только директор</div>
+
+      <!-- 3 director donuts -->
+      <div class="donut-row" id="dash-fin-donuts"></div>
+
+      <!-- Finance smooth line chart -->
+      <div class="fin-card" style="margin-bottom:14px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+          <div class="fin-card-title" style="margin-bottom:0">Финансовая динамика за год</div>
+          <select id="dash-fin-year" onchange="renderFinDash(document.getElementById('dash-month').value, getMonths())" style="background:var(--surface2);border:1px solid var(--border);color:var(--text2);padding:4px 8px;border-radius:var(--r);font-size:11px;font-family:'IBM Plex Mono',monospace;outline:none;"></select>
+        </div>
+        <div id="dash-fin-linechart"></div>
+      </div>
+    </div>
+
+    <div class="dash-section-label">Последние объекты</div>
+    <div class="obj-grid" id="dash-recent"></div>
+  </div>
+
+  <!-- ══ OBJECTS ══ -->
+  <div class="page" id="page-objects">
+    <div class="lv-wrap" id="obj-lv">
+      <div class="ph">
+        <div><div class="ph-title">Объекты</div><div class="ph-sub" id="obj-sub">—</div></div>
+        <div class="ph-right">
+          <button class="btn" onclick="openM('addObj')">+ Добавить объект</button>
+        </div>
+      </div>
+      <div class="filter-bar">
+        <span class="fc active" onclick="fObj('all',this)">Все</span>
+        <span class="fc" onclick="fObj('cleaning',this)">🧹 Клининг</span>
+        <span class="fc" onclick="fObj('guard',this)">🔒 Охрана</span>
+        <span class="fc" onclick="fObj('facility',this)">⚙️ Управление объектом</span>
+        <span class="fc" onclick="fObj('complex',this)">🔄 Комплекс</span>
+        <span class="fc" onclick="fObj('laundry',this)">🫧 Прачка</span>
+      </div>
+      <div class="obj-grid" id="obj-grid"></div>
+    </div>
+    <div class="dv-wrap" id="obj-dv"></div>
+  </div>
+
+  <!-- ══ MAP ══ -->
+  <div class="page" id="page-map">
+    <div class="ph">
+      <div><div class="ph-title">Карта объектов</div><div class="ph-sub">Все локации · OpenStreetMap</div></div>
+      <div class="ph-right"><button class="btn btn-ghost btn-sm" onclick="openAllInYandex()">🗺 Открыть все в Яндекс Картах</button></div>
+    </div>
+    <div id="osm-map" style="width:100%;height:440px;border-radius:var(--r);border:1px solid var(--border);overflow:hidden;background:var(--surface2);"></div>
+    <div class="slabel" style="margin-top:20px">Список объектов</div>
+    <div class="map-grid" id="map-grid"></div>
+  </div>
+
+  <!-- ══ EMPLOYEES ══ -->
+  <div class="page" id="page-employees">
+    <div class="ph">
+      <div><div class="ph-title">Сотрудники</div><div class="ph-sub" id="emp-sub">—</div></div>
+      <div class="ph-right">
+        <input style="background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:7px 10px;border-radius:var(--r);font-size:12px;outline:none;width:180px;" placeholder="🔍 Поиск..." oninput="empSearch(this.value)">
+        <button class="btn" onclick="openM('addEmp')">+ Сотрудник</button>
+      </div>
+    </div>
+    <div id="emp-acc"></div>
+  </div>
+
+  <!-- ══ INVENTORY ══ -->
+  <div class="page" id="page-inventory">
+    <div class="ph">
+      <div><div class="ph-title">Инвентарь и оборудование</div><div class="ph-sub">По объектам</div></div>
+      <div class="ph-right"><button class="btn" onclick="openM('addInv')">+ Добавить позицию</button></div>
+    </div>
+    <div id="inv-acc"></div>
+  </div>
+
+  <!-- ══ STANDARDS ══ -->
+  <div class="page" id="page-standards">
+    <div class="ph">
+      <div><div class="ph-title">Стандарты заботы</div><div class="ph-sub">Ключевые зоны и требования заказчиков</div></div>
+      <div class="ph-right"><button class="btn" onclick="openM('addStd')">+ Добавить стандарт</button></div>
+    </div>
+    <div id="std-list"></div>
+  </div>
+
+  <!-- ══ SALARY ══ -->
+  <div class="page" id="page-salary">
+    <div class="ph">
+      <div><div class="ph-title">Зарплаты · ФОТ</div><div class="ph-sub">Табель и расчёт — только рекрутер и директор</div></div>
+      <div class="ph-right">
+        <div class="month-sel"><span class="month-lbl">Месяц</span><select id="sal-month" onchange="renderSalary()"></select></div>
+        <button class="btn btn-ghost btn-sm" onclick="openM('bulkSal')">📋 Массовый ввод</button>
+        <button class="btn" onclick="openM('addSal')">+ Табель</button>
+      </div>
+    </div>
+    <div class="stats-grid" id="sal-stats"></div>
+    <div class="tabs">
+      <div class="tab active" onclick="swTab('sal','tab',this)">Табель</div>
+      <div class="tab" onclick="swTab('sal','cards',this)">Расчёт карточками</div>
+    </div>
+    <div class="tp active" id="sal-tab">
+      <div class="accordion" style="border:none;margin:0;"><div class="t-wrap">
+        <table><thead><tr><th>ФИО</th><th>Объект</th><th>Дней</th><th>Часов</th><th>Ставка</th><th>Начислено</th><th></th></tr></thead>
+        <tbody id="sal-tbody"></tbody></table>
+      </div></div>
+    </div>
+    <div class="tp" id="sal-cards"><div class="sal-grid" id="sal-card-grid"></div></div>
+  </div>
+
+  <!-- ══ PROCUREMENT ══ -->
+  <div class="page" id="page-procurement">
+    <div class="ph">
+      <div><div class="ph-title">Закупки</div><div class="ph-sub">Расходы по категориям — только закупщик и директор</div></div>
+      <div class="ph-right">
+        <div class="month-sel"><span class="month-lbl">Месяц</span><select id="proc-month" onchange="renderProcurement()"></select></div>
+        <button class="btn btn-ghost btn-sm" onclick="openM('importProc')">⬆ Импорт из Sheets</button>
+        <button class="btn" onclick="openM('addProc')">+ Расход</button>
+      </div>
+    </div>
+    <div class="stats-grid" id="proc-stats"></div>
+    <div id="proc-cats"></div>
+  </div>
+
+  <!-- ══ SUPPLIERS ══ -->
+  <div class="page" id="page-suppliers">
+    <div class="ph">
+      <div><div class="ph-title">База поставщиков</div><div class="ph-sub">Контрагенты и условия работы</div></div>
+      <div class="ph-right">
+        <input style="background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:7px 10px;border-radius:var(--r);font-size:12px;outline:none;width:180px;" placeholder="🔍 Поиск..." oninput="searchSup(this.value)">
+        <button class="btn" onclick="openM('addSup')">+ Поставщик</button>
+      </div>
+    </div>
+    <div class="stats-grid" id="sup-stats"></div>
+    <div class="sup-grid" id="sup-grid"></div>
+  </div>
+
+  <!-- ══ KNOWLEDGE BASE ══ -->
+  <div class="page" id="page-knowledge">
+    <div class="ph">
+      <div><div class="ph-title">База знаний</div><div class="ph-sub">Обучающие материалы, инструкции, документы для найма</div></div>
+      <div class="ph-right">
+        <button class="btn" onclick="openM('addKb')">+ Добавить материал</button>
+      </div>
+    </div>
+    <div class="kb-cat-tabs" id="kb-cat-tabs">
+      <span class="fc active" onclick="filterKb('all',this)">Все</span>
+      <span class="fc" onclick="filterKb('onboarding',this)">👋 Онбординг</span>
+      <span class="fc" onclick="filterKb('instruction',this)">📋 Инструкции</span>
+      <span class="fc" onclick="filterKb('hire',this)">📄 Найм</span>
+      <span class="fc" onclick="filterKb('standard',this)">✨ Стандарты</span>
+      <span class="fc" onclick="filterKb('other',this)">📁 Прочее</span>
+    </div>
+    <div class="kb-grid" id="kb-grid"></div>
+  </div>
+
+  <!-- ══ OKK ══ -->
+  <div class="page" id="page-okk">
+    <div class="ph">
+      <div><div class="ph-title">Контроль качества · ОКК</div><div class="ph-sub">Мониторинг уровня сервиса на объектах</div></div>
+      <div class="ph-right">
+        <select id="okk-period" onchange="renderOKK()" style="background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:7px 10px;border-radius:var(--r);font-size:12px;outline:none;">
+          <option value="30">За 30 дней</option>
+          <option value="90">За 90 дней</option>
+          <option value="180">За 6 месяцев</option>
+          <option value="365">За 12 месяцев</option>
+        </select>
+        <button class="btn btn-ghost btn-sm" onclick="syncOKK()">🔄 Обновить данные</button>
+      </div>
+    </div>
+    <!-- KPI row -->
+    <div class="stats-grid" id="okk-kpi"></div>
+    <!-- Main content: chart + risk table -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
+      <div class="info-block">
+        <div class="ib-title">Динамика качества</div>
+        <div style="padding:16px">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+            <div style="font-size:10px;color:var(--text3)">Средний балл ОКК по месяцам</div>
+            <select id="okk-dyn-year" onchange="renderOKKDynChart()" style="background:var(--surface2);border:1px solid var(--border);color:var(--text2);padding:3px 7px;border-radius:var(--r);font-size:10px;font-family:'IBM Plex Mono',monospace;outline:none;"></select>
+          </div>
+          <div id="okk-dyn-chart" class="linechart-wrap"></div>
+        </div>
+      </div>
+      <div class="info-block">
+        <div class="ib-title">Проблемные зоны (средний балл)</div>
+        <div style="padding:16px" id="okk-zones-chart"></div>
+      </div>
+    </div>
+
+    <!-- AI Analyst block -->
+    <div class="info-block" style="margin-bottom:12px" id="okk-ai-block">
+      <div class="ib-title" style="display:flex;align-items:center;justify-content:space-between">
+        <span>🤖 ИИ-аналитик · <span id="okk-ai-month-label" style="color:var(--accent2)">—</span></span>
+        <button class="btn btn-ghost btn-sm" onclick="runOKKAI(true)" id="okk-ai-btn">🔄 Обновить анализ</button>
+      </div>
+      <div id="okk-ai-result" style="padding:14px;font-size:12px;line-height:1.8;color:var(--text2)">
+        <span style="color:var(--text3)">Нажмите «Обновить анализ» или дождитесь 1-го числа месяца для автоматического анализа.</span>
+      </div>
+    </div>
+    <!-- Risk table -->
+    <div class="info-block">
+      <div class="ib-title">Объекты · Зоны риска</div>
+      <div class="t-wrap"><table>
+        <thead><tr>
+          <th>Объект</th><th>Город</th><th>Менеджер</th>
+          <th>Последняя проверка</th><th>Балл 30 дн.</th><th>Балл 90 дн.</th>
+          <th>Динамика</th><th>Проверок</th><th>Осн. проблема</th><th>Статус</th>
+        </tr></thead>
+        <tbody id="okk-risk-tbody"></tbody>
+      </table></div>
+    </div>
+    <!-- Object detail view -->
+    <div id="okk-detail" style="display:none">
+      <div class="ph" style="margin-top:16px">
+        <button class="btn btn-ghost btn-sm" onclick="closeOKKDetail()">← Назад</button>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
+        <div class="info-block" id="okk-det-info"></div>
+        <div class="info-block">
+          <div class="ib-title">График качества объекта</div>
+          <div style="padding:16px;height:180px;display:flex;align-items:flex-end;gap:4px;border-bottom:1px solid var(--border)" id="okk-det-chart"></div>
+        </div>
+      </div>
+      <div class="info-block" style="margin-bottom:12px">
+        <div class="ib-title">Последние проверки</div>
+        <div class="t-wrap"><table>
+          <thead><tr><th>Дата</th><th>Тип</th><th>Балл</th><th>Комментарий</th><th>Проверяющий</th><th>Фото</th></tr></thead>
+          <tbody id="okk-det-checks"></tbody>
+        </table></div>
+      </div>
+      <div class="info-block">
+        <div class="ib-title">Средние оценки по зонам</div>
+        <div style="padding:16px" id="okk-det-zones"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ SETTINGS ══ -->
+  <div class="page" id="page-settings">
+    <div class="ph">
+      <div><div class="ph-title">Настройки</div><div class="ph-sub">Пользователи и права доступа</div></div>
+      <div class="ph-right"><button class="btn" onclick="openM('addUser')">+ Пользователь</button></div>
+    </div>
+    <div class="accordion" style="margin:0;margin-bottom:16px">
+      <div class="t-wrap"><table>
+        <thead><tr><th>Логин</th><th>Имя</th><th>Роль</th><th>Доступные разделы</th><th></th></tr></thead>
+        <tbody id="users-tbody"></tbody>
+      </table></div>
+    </div>
+    <!-- Google Sheets connection block -->
+    <div class="info-block">
+      <div class="ib-title">🔗 Подключение Google Sheets (Apps Script)</div>
+      <div style="padding:16px">
+        <div style="font-size:12px;color:var(--text2);margin-bottom:16px;line-height:1.6">
+          Вставьте URL-адреса Apps Script для каждой таблицы.<br>
+          <span style="color:var(--text3)">Как получить URL: Расширения → Apps Script → Deploy → Web App → скопировать URL</span>
+        </div>
+        <div class="fg">
+          <div class="fgroup full"><label>ALPHA_Объекты — Apps Script URL</label><input id="gs-url-objects" placeholder="https://script.google.com/macros/s/.../exec" style="font-family:'IBM Plex Mono',monospace;font-size:11px;"></div>
+          <div class="fgroup full"><label>ALPHA_Персонал — Apps Script URL</label><input id="gs-url-staff" placeholder="https://script.google.com/macros/s/.../exec" style="font-family:'IBM Plex Mono',monospace;font-size:11px;"></div>
+          <div class="fgroup full"><label>ALPHA_Финансы — Apps Script URL</label><input id="gs-url-finance" placeholder="https://script.google.com/macros/s/.../exec" style="font-family:'IBM Plex Mono',monospace;font-size:11px;"></div>
+          <div class="fgroup full"><label>ALPHA_ОКК — Apps Script URL</label><input id="gs-url-okk" placeholder="https://script.google.com/macros/s/.../exec" style="font-family:'IBM Plex Mono',monospace;font-size:11px;"></div>
+        </div>
+        <div style="display:flex;gap:8px;margin-top:8px">
+          <button class="btn btn-ghost btn-sm" onclick="testGSConnection()">🔍 Проверить подключение</button>
+          <button class="btn btn-sm" onclick="saveGSUrls()">💾 Сохранить URL</button>
+          <button class="btn btn-ghost btn-sm" onclick="syncAllSheets()">🔄 Синхронизировать всё</button>
+        </div>
+        <div id="gs-status" style="margin-top:10px;font-size:11px;font-family:'IBM Plex Mono',monospace;color:var(--text3)"></div>
+      </div>
+    </div>
+  </div>
+
+</main>
+</div>
+</div>
+
+<!-- ═══ MODALS ═══ -->
+<div class="modal-bg" id="m-addObj">
+  <div class="modal"><div class="modal-title">+ НОВЫЙ ОБЪЕКТ</div>
+  <div class="fg">
+    <div class="fgroup full"><label>Наименование *</label><input id="ao-name" placeholder="ТРЦ Мега, Банк Капитал..."></div>
+    <div class="fgroup"><label>Город</label><input id="ao-city" placeholder="Ташкент"></div>
+    <div class="fgroup"><label>Адрес</label><input id="ao-addr" placeholder="ул. Амира Темура, 1"></div>
+    <div class="fgroup"><label>Тип услуг</label><select id="ao-type"><option value="cleaning">🧹 Клининг</option><option value="guard">🔒 Охрана</option><option value="facility">⚙️ Управление объектом</option><option value="complex">🔄 Комплекс</option><option value="laundry">🫧 Прачка</option></select></div>
+    <div class="fgroup"><label>Площадь (м²)</label><input id="ao-area" type="number" placeholder="5000"></div>
+    <div class="fgroup"><label>Менеджер объекта</label><input id="ao-mgr" placeholder="ФИО"></div>
+    <div class="fgroup"><label>Тел. менеджера</label><input id="ao-mtel" placeholder="+998 90 ..."></div>
+    <div class="fgroup"><label>Статус</label><select id="ao-status"><option value="active">Активный</option><option value="inactive">Неактивный</option><option value="tender">Тендер</option></select></div>
+    <div class="fgroup" id="ao-contract-f" style="display:none"><label>Стоимость контракта/мес (сум)</label><input id="ao-contract" type="number" placeholder="0"></div>
+    <div class="fgroup full"><label>Услуги объекта (выберите все нужные)</label>
+      <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:4px;">
+        <label style="display:flex;align-items:center;gap:6px;font-size:12px;text-transform:none;letter-spacing:0;color:var(--text2);cursor:pointer;padding:6px 10px;border:1px solid var(--border);border-radius:var(--r);"><input type="checkbox" id="ao-svc-cleaning" style="width:auto;padding:0;border:none;background:none;"> Ежедневная уборка</label>
+        <label style="display:flex;align-items:center;gap:6px;font-size:12px;text-transform:none;letter-spacing:0;color:var(--text2);cursor:pointer;padding:6px 10px;border:1px solid var(--border);border-radius:var(--r);"><input type="checkbox" id="ao-svc-guard" style="width:auto;padding:0;border:none;background:none;"> Охрана</label>
+        <label style="display:flex;align-items:center;gap:6px;font-size:12px;text-transform:none;letter-spacing:0;color:var(--text2);cursor:pointer;padding:6px 10px;border:1px solid var(--border);border-radius:var(--r);"><input type="checkbox" id="ao-svc-facility" style="width:auto;padding:0;border:none;background:none;"> Управление объектом</label>
+        <label style="display:flex;align-items:center;gap:6px;font-size:12px;text-transform:none;letter-spacing:0;color:var(--text2);cursor:pointer;padding:6px 10px;border:1px solid var(--border);border-radius:var(--r);"><input type="checkbox" id="ao-svc-mgmt" style="width:auto;padding:0;border:none;background:none;"> Управляющая компания</label>
+      </div>
+    </div>
+    <div class="fgroup full"><label>Особые требования заказчика</label><textarea id="ao-special" placeholder="Центральный вход — каждые 2 часа..."></textarea></div>
+  </div>
+  <div class="modal-footer"><button class="btn btn-ghost btn-sm" onclick="closeM('addObj')">Отмена</button><button class="btn btn-sm" onclick="saveObj()">Сохранить объект</button></div>
+  </div>
+</div>
+
+<div class="modal-bg" id="m-addEmp">
+  <div class="modal"><div class="modal-title">+ НОВЫЙ СОТРУДНИК</div>
+  <div class="fg">
+    <div class="fgroup full"><label>ФИО *</label><input id="ae-name" placeholder="Иванов Иван Иванович"></div>
+    <div class="fgroup"><label>Телефон</label><input id="ae-phone" placeholder="+998 90 ..."></div>
+    <div class="fgroup"><label>Объект</label><select id="ae-obj"></select></div>
+    <div class="fgroup"><label>Должность</label><select id="ae-role">
+      <option value="cleaner">Техничка</option>
+      <option value="senior">Старшая</option>
+      <option value="handyman">Разнорабочий</option>
+      <option value="florist">Флорист</option>
+      <option value="electrician">Электрик</option>
+      <option value="guard">Охрана</option>
+      <option value="head_guard">Начальник охраны</option>
+      <option value="curator_guard">Куратор охрана</option>
+      <option value="head">Начальник</option>
+      <option value="cook">Повар</option>
+      <option value="supervisor">Супервайзер</option>
+      <option value="manager">Менеджер</option>
+      <option value="okk_manager">Менеджер ОКК</option>
+      <option value="project_manager">Менеджер проекта</option>
+      <option value="recruiter">Рекрутер</option>
+    </select></div>
+    <div class="fgroup"><label>График</label><select id="ae-sched"><option>5/2 (09:00–18:00)</option><option>2/2 (07:00–19:00)</option><option>2/2 (19:00–07:00)</option><option>6/1</option><option>Неполный день</option><option>Почасовой</option></select></div>
+    <div class="fgroup"><label>Тип оплаты</label><select id="ae-ptype" onchange="togglePay()"><option value="rate">Ставка/мес</option><option value="hourly">Почасовая</option></select></div>
+    <div class="fgroup" id="ae-rate-f"><label>Ставка (сум/мес)</label><input id="ae-rate" type="number" placeholder="2000000"></div>
+    <div class="fgroup" id="ae-hr-f" style="display:none"><label>Ставка (сум/час)</label><input id="ae-hr" type="number" placeholder="15000"></div>
+    <div class="fgroup"><label>Адрес</label><input id="ae-addr" placeholder="г. Ташкент..."></div>
+    <div class="fgroup"><label>Дата выхода</label><input id="ae-date" type="date"></div>
+    <div class="fgroup"><label>Статус</label><select id="ae-status"><option value="active">Работает</option><option value="vacation">Отпуск</option><option value="sick">Болеет</option><option value="fired">Уволен</option></select></div>
+    <div class="fgroup full"><label>Примечания (ТБ, документы)</label><textarea id="ae-notes" placeholder="ТБ инструктаж пройден..."></textarea></div>
+  </div>
+  <div class="modal-footer"><button class="btn btn-ghost btn-sm" onclick="closeM('addEmp')">Отмена</button><button class="btn btn-sm" onclick="saveEmp()">Сохранить</button></div>
+  </div>
+</div>
+
+<div class="modal-bg" id="m-addInv">
+  <div class="modal"><div class="modal-title">+ ИНВЕНТАРЬ / ОБОРУДОВАНИЕ</div>
+  <div class="fg">
+    <div class="fgroup full"><label>Наименование *</label><input id="ai-name" placeholder="Пылесос Karcher, Тряпка МОП..."></div>
+    <div class="fgroup"><label>Тип</label><select id="ai-type"><option value="equipment">Оборудование</option><option value="inventory">Инвентарь</option><option value="supply">Моющее средство</option><option value="hygiene">Гигиена</option></select></div>
+    <div class="fgroup"><label>Объект</label><select id="ai-obj"></select></div>
+    <div class="fgroup"><label>Количество</label><input id="ai-qty" type="number" placeholder="1"></div>
+    <div class="fgroup"><label>Единица</label><select id="ai-unit"><option>шт</option><option>л</option><option>кг</option><option>уп</option><option>рул</option></select></div>
+    <div class="fgroup"><label>Состояние</label><select id="ai-cond"><option value="ok">Работает</option><option value="broken">Сломан</option><option value="repair">На ремонте</option><option value="low">Заканчивается</option></select></div>
+    <div class="fgroup full"><label>Примечания</label><input id="ai-notes" placeholder="Закупать ежемесячно..."></div>
+  </div>
+  <div class="modal-footer"><button class="btn btn-ghost btn-sm" onclick="closeM('addInv')">Отмена</button><button class="btn btn-sm" onclick="saveInv()">Сохранить</button></div>
+  </div>
+</div>
+
+<div class="modal-bg" id="m-addStd">
+  <div class="modal"><div class="modal-title">+ СТАНДАРТ ЗАБОТЫ</div>
+  <div class="fg">
+    <div class="fgroup full"><label>Объект</label><select id="as-obj"></select></div>
+    <div class="fgroup full"><label>Ключевая зона *</label><input id="as-zone" placeholder="Центральный вход, Туалеты, Лифты..."></div>
+    <div class="fgroup"><label>Приоритет</label><select id="as-pri"><option value="critical">🔴 Критично</option><option value="high">🟠 Высокий</option><option value="medium">🟡 Средний</option><option value="low">🟢 Низкий</option></select></div>
+    <div class="fgroup"><label>Частота</label><select id="as-freq"><option>Каждый час</option><option>Каждые 2 часа</option><option>Каждые 4 часа</option><option>2 раза в день</option><option>Ежедневно</option><option>Еженедельно</option></select></div>
+    <div class="fgroup full"><label>Требования заказчика</label><textarea id="as-desc" placeholder="Заказчик особо обращает внимание на..."></textarea></div>
+  </div>
+  <div class="modal-footer"><button class="btn btn-ghost btn-sm" onclick="closeM('addStd')">Отмена</button><button class="btn btn-sm" onclick="saveStd()">Сохранить</button></div>
+  </div>
+</div>
+
+<div class="modal-bg" id="m-addSal">
+  <div class="modal"><div class="modal-title">+ ТАБЕЛЬ / НАЧИСЛЕНИЕ</div>
+  <div class="fg">
+    <div class="fgroup full"><label>Сотрудник</label><select id="ase-emp"></select></div>
+    <div class="fgroup"><label>Месяц</label><select id="ase-month"></select></div>
+    <div class="fgroup"><label>Дней отработано</label><input id="ase-days" type="number" placeholder="22" min="0" max="31"></div>
+    <div class="fgroup"><label>Часов (для почасовых)</label><input id="ase-hours" type="number" placeholder="176"></div>
+    <div class="fgroup"><label>Бонус (сум)</label><input id="ase-bonus" type="number" placeholder="0"></div>
+    <div class="fgroup"><label>Удержание (сум)</label><input id="ase-ded" type="number" placeholder="0"></div>
+    <div class="fgroup full"><label>Примечание</label><input id="ase-note" placeholder="Выплачено, премия..."></div>
+  </div>
+  <div class="modal-footer"><button class="btn btn-ghost btn-sm" onclick="closeM('addSal')">Отмена</button><button class="btn btn-sm" onclick="saveSal()">Сохранить</button></div>
+  </div>
+</div>
+
+<div class="modal-bg" id="m-addProc">
+  <div class="modal"><div class="modal-title">+ РАСХОД НА ЗАКУПКУ</div>
+  <div class="fg">
+    <div class="fgroup full"><label>Наименование *</label><input id="ap-name" placeholder="Domestos 5л, Мешки для мусора..."></div>
+    <div class="fgroup"><label>Категория</label><select id="ap-cat"><option value="cleaning_supplies">Моющие средства</option><option value="hygiene">Гигиена (бумага, салфетки)</option><option value="logistics">Логистика</option><option value="equipment">Оборудование</option><option value="inventory">Инвентарь</option><option value="other">Прочее</option></select></div>
+    <div class="fgroup"><label>Месяц</label><select id="ap-month"></select></div>
+    <div class="fgroup"><label>Сумма (сум)</label><input id="ap-amount" type="number" placeholder="500000"></div>
+    <div class="fgroup"><label>Поставщик</label><input id="ap-sup" placeholder="Название компании..."></div>
+    <div class="fgroup"><label>Объект</label><select id="ap-obj"></select></div>
+    <div class="fgroup full"><label>Примечание</label><input id="ap-note" placeholder="Счёт №, накладная..."></div>
+  </div>
+  <div class="modal-footer"><button class="btn btn-ghost btn-sm" onclick="closeM('addProc')">Отмена</button><button class="btn btn-sm" onclick="saveProc()">Сохранить</button></div>
+  </div>
+</div>
+
+<div class="modal-bg" id="m-addUser">
+  <div class="modal"><div class="modal-title">+ НОВЫЙ ПОЛЬЗОВАТЕЛЬ</div>
+  <div class="fg">
+    <div class="fgroup"><label>Логин *</label><input id="au-login" placeholder="manager1"></div>
+    <div class="fgroup"><label>Пароль *</label><input id="au-pass" type="password" placeholder="мин. 6 символов"></div>
+    <div class="fgroup"><label>Имя</label><input id="au-name" placeholder="Азизов Камол"></div>
+    <div class="fgroup"><label>Роль</label><select id="au-role"><option value="director">Директор</option><option value="manager">Менеджер</option><option value="recruiter">Рекрутер/HR</option><option value="purchaser">Закупщик</option><option value="guest">Гость</option></select></div>
+  </div>
+  <div class="modal-footer"><button class="btn btn-ghost btn-sm" onclick="closeM('addUser')">Отмена</button><button class="btn btn-sm" onclick="saveUser()">Сохранить</button></div>
+  </div>
+</div>
+
+<!-- SUPPLIER MODAL -->
+<div class="modal-bg" id="m-addSup">
+  <div class="modal"><div class="modal-title">+ НОВЫЙ ПОСТАВЩИК</div>
+  <div class="fg">
+    <div class="fgroup full"><label>Наименование поставщика *</label><input id="sup-name" placeholder="ООО CleanPro, ИП Ахмедов..."></div>
+    <div class="fgroup full"><label>Что поставляет</label><input id="sup-what" placeholder="Моющие средства, гигиена, оборудование..."></div>
+    <div class="fgroup"><label>Телефон</label><input id="sup-phone" placeholder="+998 90 ..."></div>
+    <div class="fgroup"><label>Способ оплаты</label><select id="sup-pay"><option value="cash">Наличные</option><option value="bank">Банковский перевод</option><option value="card">Карта</option><option value="mixed">Смешанный</option></select></div>
+    <div class="fgroup"><label>Категория товаров</label><select id="sup-cat"><option value="cleaning_supplies">Моющие средства</option><option value="hygiene">Гигиена</option><option value="logistics">Логистика</option><option value="equipment">Оборудование</option><option value="inventory">Инвентарь</option><option value="other">Прочее</option></select></div>
+    <div class="fgroup"><label>Рейтинг</label><select id="sup-rating"><option value="5">⭐⭐⭐⭐⭐ Отличный</option><option value="4">⭐⭐⭐⭐ Хороший</option><option value="3">⭐⭐⭐ Средний</option><option value="2">⭐⭐ Плохой</option></select></div>
+    <div class="fgroup full"><label>Примечание</label><textarea id="sup-note" placeholder="Условия работы, скидки, особенности..."></textarea></div>
+  </div>
+  <div class="modal-footer"><button class="btn btn-ghost btn-sm" onclick="closeM('addSup')">Отмена</button><button class="btn btn-sm" onclick="saveSup()">Сохранить</button></div>
+  </div>
+</div>
+
+<!-- KNOWLEDGE BASE MODAL -->
+<div class="modal-bg" id="m-addKb">
+  <div class="modal"><div class="modal-title">+ ДОБАВИТЬ МАТЕРИАЛ</div>
+  <div class="fg">
+    <div class="fgroup full"><label>Название *</label><input id="kb-title" placeholder="Инструкция по уборке туалетов, Оффер сотрудника..."></div>
+    <div class="fgroup"><label>Категория</label><select id="kb-cat"><option value="onboarding">👋 Онбординг</option><option value="instruction">📋 Инструкция</option><option value="hire">📄 Документ найма</option><option value="standard">✨ Стандарт</option><option value="other">📁 Прочее</option></select></div>
+    <div class="fgroup"><label>Тип файла</label><select id="kb-type"><option value="lnk">🔗 Ссылка (Google Drive, YouTube...)</option><option value="doc">📄 Документ</option><option value="vid">🎬 Видео</option><option value="img">🖼 Изображение</option></select></div>
+    <div class="fgroup full"><label>Ссылка (URL) *</label><input id="kb-url" placeholder="https://drive.google.com/..."></div>
+    <div class="fgroup full"><label>Описание</label><textarea id="kb-desc" placeholder="Краткое описание содержимого..."></textarea></div>
+    <div class="fgroup"><label>Для кого</label><select id="kb-role"><option value="all">Все сотрудники</option><option value="cleaner">Уборщики</option><option value="guard">Охранники</option><option value="supervisor">Супервайзеры</option><option value="manager">Менеджеры</option></select></div>
+  </div>
+  <div class="modal-footer"><button class="btn btn-ghost btn-sm" onclick="closeM('addKb')">Отмена</button><button class="btn btn-sm" onclick="saveKb()">Добавить</button></div>
+  </div>
+</div>
+
+<!-- BULK SALARY MODAL -->
+<div class="modal-bg" id="m-bulkSal">
+  <div class="modal" style="width:700px;max-width:98vw"><div class="modal-title">📋 МАССОВЫЙ ВВОД ТАБЕЛЯ</div>
+  <div style="display:flex;gap:10px;margin-bottom:16px;align-items:flex-end;">
+    <div class="fgroup" style="flex:1"><label>Объект</label><select id="bulk-obj" onchange="loadBulkEmps()"></select></div>
+    <div class="fgroup"><label>Месяц</label><select id="bulk-month"></select></div>
+    <button class="btn btn-ghost btn-sm" onclick="fillAllDays()" style="margin-bottom:1px" title="Заполнить одинаковое кол-во дней всем">Заполнить всем</button>
+  </div>
+  <div style="display:flex;gap:8px;margin-bottom:12px;">
+    <input id="bulk-fill-days" class="bulk-input" style="width:70px" placeholder="дней" type="number" min="0" max="31">
+    <input id="bulk-fill-hours" class="bulk-input" style="width:70px" placeholder="часов" type="number" min="0">
+    <button class="btn btn-ghost btn-sm" onclick="fillAllDays()">Применить ко всем ↓</button>
+    <span style="font-size:11px;color:var(--text3);align-self:center">Вводите значение → нажмите кнопку → изменится у всех в списке</span>
+  </div>
+  <div style="max-height:360px;overflow-y:auto;">
+    <table class="bulk-table" style="width:100%">
+      <thead><tr><th>ФИО</th><th>Должность</th><th>Ставка</th><th>Дней</th><th>Часов</th><th>Бонус</th></tr></thead>
+      <tbody id="bulk-tbody"></tbody>
+    </table>
+  </div>
+  <div class="modal-footer"><button class="btn btn-ghost btn-sm" onclick="closeM('bulkSal')">Отмена</button><button class="btn btn-sm" onclick="saveBulkSal()">💾 Сохранить всё</button></div>
+  </div>
+</div>
+
+<!-- IMPORT PROCUREMENT MODAL -->
+<div class="modal-bg" id="m-importProc">
+  <div class="modal"><div class="modal-title">⬆ ИМПОРТ ИЗ GOOGLE SHEETS</div>
+  <div style="background:rgba(232,255,71,.05);border:1px solid rgba(232,255,71,.15);border-radius:var(--r);padding:14px;margin-bottom:16px;font-size:12px;color:var(--text2);line-height:1.7">
+    <strong style="color:var(--accent)">Как это работает:</strong><br>
+    1. Откройте вашу сводную таблицу закупок в Google Sheets<br>
+    2. Файл → Поделиться → Опубликовать в интернете → CSV → Скопировать ссылку<br>
+    3. Вставьте ссылку ниже и нажмите "Загрузить"
+  </div>
+  <div class="fg">
+    <div class="fgroup full"><label>Ссылка на CSV таблицу</label><input id="imp-url" placeholder="https://docs.google.com/spreadsheets/d/.../export?format=csv"></div>
+    <div class="fgroup"><label>Месяц для импорта</label><select id="imp-month"></select></div>
+    <div class="fgroup"><label>Колонка с наименованием</label><input id="imp-col-name" placeholder="A (или 1)" value="A"></div>
+    <div class="fgroup"><label>Колонка с суммой</label><input id="imp-col-amt" placeholder="B (или 2)" value="B"></div>
+  </div>
+  <div id="imp-preview" style="margin-top:12px;display:none">
+    <div class="slabel">Предпросмотр данных</div>
+    <div id="imp-preview-body" style="font-size:12px;color:var(--text2);background:var(--surface2);padding:10px;border-radius:var(--r);max-height:150px;overflow-y:auto;font-family:'IBM Plex Mono',monospace;"></div>
+  </div>
+  <div class="modal-footer">
+    <button class="btn btn-ghost btn-sm" onclick="closeM('importProc')">Отмена</button>
+    <button class="btn btn-ghost btn-sm" onclick="previewImport()">👁 Просмотр</button>
+    <button class="btn btn-sm" onclick="confirmImport()">✅ Импортировать</button>
+  </div>
+  </div>
+</div>
+
+<script>
+// ════ DATA ════
+let db={objects:[],employees:[],inventory:[],standards:[],salary:[],procurement:[],users:[]};
+let CU=null; // current user
+let objFilt='all', empQ='';
+
+function loadDB(){try{const s=localStorage.getItem('fmdb3');if(s)db=JSON.parse(s);}catch(e){}}
+function saveDB(){try{localStorage.setItem('fmdb3',JSON.stringify(db));}catch(e){}}
+
+// ════ USERS / ROLES ════
+const DEFAULT_USERS=[
+  {login:'director', pass:'dir2024', name:'Директор',     role:'director'},
+  {login:'manager',  pass:'mgr2024', name:'Менеджер',     role:'manager'},
+  {login:'okk',      pass:'okk2024', name:'Менеджер ОКК', role:'okk'},
+  {login:'recruiter',pass:'rec2024', name:'Рекрутер',     role:'recruiter'},
+  {login:'purchaser',pass:'pur2024', name:'Закупщик',     role:'purchaser'},
+  {login:'guest',    pass:'guest123',name:'Гость',        role:'guest'},
+];
+
+// ALL roles see these pages
+const COMMON_PAGES=[
+  {id:'dashboard', icon:'⬛', label:'Дашборд'},
+  {id:'objects',   icon:'🏢', label:'Объекты'},
+  {id:'map',       icon:'📍', label:'Карта объектов'},
+  {id:'employees', icon:'👥', label:'Сотрудники'},
+  {id:'inventory', icon:'📦', label:'Инвентарь'},
+];
+
+// Extra pages per role
+const EXTRA_PAGES={
+  director:[
+    {id:'standards',   icon:'✨', label:'Стандарты заботы'},
+    {id:'okk',         icon:'📊', label:'Контроль качества'},
+    {id:'salary',      icon:'💰', label:'Зарплаты / ФОТ'},
+    {id:'procurement', icon:'🛒', label:'Закупки'},
+    {id:'suppliers',   icon:'🤝', label:'Поставщики'},
+    {id:'knowledge',   icon:'📚', label:'База знаний'},
+    {id:'settings',    icon:'⚙️', label:'Настройки'},
+  ],
+  manager:[
+    {id:'standards', icon:'✨', label:'Стандарты заботы'},
+    {id:'okk',       icon:'📊', label:'Контроль качества'},
+    {id:'knowledge', icon:'📚', label:'База знаний'},
+  ],
+  okk:[
+    {id:'okk', icon:'📊', label:'Контроль качества'},
+  ],
+  recruiter:[
+    {id:'salary', icon:'💰', label:'Зарплаты / ФОТ'},
+  ],
+  purchaser:[
+    {id:'procurement', icon:'🛒', label:'Закупки'},
+    {id:'suppliers',   icon:'🤝', label:'Поставщики'},
+  ],
+  guest:[],
+};
+
+const ROLE_LABELS={director:'Директор',manager:'Менеджер',okk:'Менеджер ОКК',recruiter:'Рекрутер',purchaser:'Закупщик',guest:'Гость'};
+
+function userPages(role){
+  return [...COMMON_PAGES,...(EXTRA_PAGES[role]||[])];
+}
+
+// ════ AUTH ════
+function doLogin(){
+  const u=document.getElementById('li-u').value.trim();
+  const p=document.getElementById('li-p').value;
+  const user=db.users.find(x=>x.login===u&&x.pass===p);
+  if(!user){document.getElementById('login-err').style.display='block';return;}
+  CU=user;
+  document.getElementById('login-screen').style.display='none';
+  document.getElementById('app').style.display='block';
+  document.getElementById('login-err').style.display='none';
+  if(CU.role==='director') document.getElementById('ao-contract-f').style.display='flex';
+  buildSidebar(); fillMonths(); fillSelects(); loadSample();
+  showPage('dashboard');
+}
+document.addEventListener('keydown',e=>{if(e.key==='Enter'&&document.getElementById('login-screen').style.display!=='none')doLogin();});
+function doLogout(){CU=null;document.getElementById('app').style.display='none';document.getElementById('login-screen').style.display='flex';}
+
+function buildSidebar(){
+  document.getElementById('sb-av').textContent=CU.name[0];
+  document.getElementById('sb-uname').textContent=CU.name;
+  document.getElementById('sb-urole').textContent=ROLE_LABELS[CU.role];
+  const pages=userPages(CU.role);
+  const common=COMMON_PAGES.map(p=>p.id);
+  const extra=(EXTRA_PAGES[CU.role]||[]).map(p=>p.id);
+  let html='<div class="sb-section">Основное</div>';
+  COMMON_PAGES.forEach(p=>{
+    html+=`<div class="nav-item" id="nav-${p.id}" onclick="showPage('${p.id}')"><span class="nav-icon">${p.icon}</span>${p.label}</div>`;
+  });
+  if((EXTRA_PAGES[CU.role]||[]).length){
+    html+='<div class="sb-section">Мой раздел</div>';
+    (EXTRA_PAGES[CU.role]||[]).forEach(p=>{
+      html+=`<div class="nav-item" id="nav-${p.id}" onclick="showPage('${p.id}')"><span class="nav-icon">${p.icon}</span>${p.label}</div>`;
+    });
+  }
+  document.getElementById('sb-nav').innerHTML=html;
+}
+
+function showPage(id){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  const pg=document.getElementById('page-'+id);
+  if(pg)pg.classList.add('active');
+  const nv=document.getElementById('nav-'+id);
+  if(nv)nv.classList.add('active');
+  renderPage(id);
+  updateSbStats();
+}
+
+function renderPage(id){
+  if(id==='dashboard')renderDashboard();
+  else if(id==='objects')renderObjects();
+  else if(id==='map')renderMap();
+  else if(id==='employees')renderEmployees();
+  else if(id==='inventory')renderInventory();
+  else if(id==='standards')renderStandards();
+  else if(id==='salary')renderSalary();
+  else if(id==='procurement')renderProcurement();
+  else if(id==='suppliers')renderSuppliers();
+  else if(id==='knowledge')renderKnowledge();
+  else if(id==='okk')renderOKK();
+  else if(id==='settings'){if(window.renderSettings)window.renderSettings();else renderSettings();}
+}
+
+function updateSbStats(){
+  document.getElementById('sb-stats').innerHTML=`
+    <div class="sb-stat-row"><span class="sb-stat-l">Объектов</span><span class="sb-stat-v">${db.objects.length}</span></div>
+    <div class="sb-stat-row"><span class="sb-stat-l">Сотрудников</span><span class="sb-stat-v">${db.employees.length}</span></div>
+    <div class="sb-stat-row"><span class="sb-stat-l">Активных</span><span class="sb-stat-v">${db.objects.filter(o=>o.status==='active').length}</span></div>`;
+}
+
+// ════ HELPERS ════
+const TL={cleaning:'Клининг',guard:'Охрана',facility:'Управление объектом',complex:'Комплекс',laundry:'Прачка'};
+const TB={cleaning:'b-green',guard:'b-blue',facility:'b-orange',complex:'b-yellow',laundry:'b-purple'};
+const SB={active:'b-green',inactive:'b-red',tender:'b-orange'};
+const SL={active:'Активный',inactive:'Неактивный',tender:'Тендер'};
+// Полный список должностей
+const RL={
+  cleaner:'Техничка',senior:'Старшая',handyman:'Разнорабочий',
+  florist:'Флорист',electrician:'Электрик',guard:'Охрана',
+  head_guard:'Начальник охраны',curator_guard:'Куратор охрана',
+  head:'Начальник',cook:'Повар',manager:'Менеджер',
+  okk_manager:'Менеджер ОКК',project_manager:'Менеджер проекта',
+  recruiter:'Рекрутер',supervisor:'Супервайзер'
+};
+const ES={active:'b-green',vacation:'b-orange',sick:'b-orange',fired:'b-red'};
+const EL={active:'Работает',vacation:'Отпуск',sick:'Болеет',fired:'Уволен'};
+const CL={ok:'b-green',broken:'b-red',repair:'b-orange',low:'b-yellow'};
+const CN={ok:'Работает',broken:'Сломан',repair:'На ремонте',low:'Заканчивается'};
+const IT={equipment:'Оборудование',inventory:'Инвентарь',supply:'Моющее ср-во',hygiene:'Гигиена'};
+const PC={cleaning_supplies:'Моющие средства',hygiene:'Гигиена',logistics:'Логистика',equipment:'Оборудование',inventory:'Инвентарь',other:'Прочее'};
+const PI={cleaning_supplies:'🧴',hygiene:'🧻',logistics:'🚚',equipment:'🔧',inventory:'🪣',other:'📋'};
+// Приоритеты на русском
+const PRL={critical:'Критично',high:'Высокий',medium:'Средний',low:'Низкий'};
+const PRC={critical:'#ff5757',high:'#ffb347',medium:'#e8ff47',low:'#4dff91'};
+
+// Форматирование сумм с пробелами (1 800 000 сум)
+function fm(n){
+  return Math.round(n||0).toLocaleString('ru-RU').replace(/,/g,'\u00a0');
+}
+function fms(n){return fm(n)+' сум';}
+function nid(a){return a.length?Math.max(...a.map(i=>i.id||0))+1:1;}
+function obi(id){return db.objects.find(o=>o.id===id);}
+function empi(id){return db.employees.find(e=>e.id===id);}
+
+function getMonths(){
+  const r=[];const now=new Date();
+  for(let i=0;i<12;i++){
+    const d=new Date(now.getFullYear(),now.getMonth()-i,1);
+    const val=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+    const label=d.toLocaleDateString('ru-RU',{year:'numeric',month:'long'});
+    r.push({val,label});
+  }
+  return r;
+}
+
+function fillMonths(){
+  const opts=getMonths().map(m=>`<option value="${m.val}">${m.label}</option>`).join('');
+  ['dash-month','sal-month','proc-month','ase-month','ap-month','bulk-month','imp-month'].forEach(id=>{const el=document.getElementById(id);if(el)el.innerHTML=opts;});
+}
+
+function fillSelects(){
+  const opts='<option value="">— Все объекты —</option>'+db.objects.map(o=>`<option value="${o.id}">${o.name}</option>`).join('');
+  ['ae-obj','ai-obj','as-obj','ap-obj','bulk-obj'].forEach(id=>{const el=document.getElementById(id);if(el)el.innerHTML=opts;});
+  const eOpts='<option value="">— Выберите —</option>'+db.employees.map(e=>`<option value="${e.id}">${e.name}</option>`).join('');
+  const el=document.getElementById('ase-emp');if(el)el.innerHTML=eOpts;
+}
+
+function calcSal(emp,e){
+  if(!emp||!e)return 0;
+  let base=emp.paytype==='hourly'?(emp.hr||0)*(e.hours||0):(emp.rate||0)*(e.days||0)/22;
+  return Math.round(base+(e.bonus||0)-(e.ded||0));
+}
+
+function delta(cur,prev){
+  if(prev===undefined||prev===null)return '';
+  const pct=prev?Math.round((cur-prev)/prev*100):0;
+  if(pct>0)return `<span class="sc-delta up">▲ +${pct}%</span>`;
+  if(pct<0)return `<span class="sc-delta dn">▼ ${pct}%</span>`;
+  return `<span class="sc-delta eq">= 0%</span>`;
+}
+
+function spark(vals,color='var(--accent)'){
+  const max=Math.max(...vals,1);
+  return `<div class="spark">${vals.map((v,i)=>`<div class="spark-b ${i===vals.length-1?'hi':''}" style="height:${Math.round(v/max*100)}%;background:${i===vals.length-1?color:'var(--border2)'}"></div>`).join('')}</div>`;
+}
+
+// ════ SAMPLE DATA ════
+function loadSample(){
+  if(db.objects.length)return;
+  if(!db.users.length)db.users=DEFAULT_USERS.map(u=>({...u}));
+  const M=getMonths();
+  const[m0,m1,m2,m3]=[M[0].val,M[1].val,M[2].val,M[3].val];
+
+  db.objects=[
+    {id:1,name:'ТРЦ "МЕГА Ташкент"',city:'Ташкент',addr:'ул. Амира Темура, 41',type:'complex',area:85000,mgr:'Азизов Камол',mtel:'+998 90 111 22 33',status:'active',contract:18500000,desc:'Ежедневная уборка всех зон, охрана 5 постов, фасилити',special:'Центральный атриум — каждые 2 часа. Особый контроль туалетных зон.'},
+    {id:2,name:'БЦ "Сити Тауэр"',city:'Ташкент',addr:'пр. Навои, 15',type:'cleaning',area:12000,mgr:'Иванова Марина',mtel:'+998 91 234 56 78',status:'active',contract:5200000,desc:'Ежедневная уборка офисов, холлов, паркинга',special:'Лобби убирается до 08:00. Лифты — каждые 3 часа.'},
+    {id:3,name:'Банк "Капитал"',city:'Ташкент',addr:'ул. Шота Руставели, 7',type:'cleaning',area:3500,mgr:'Ким Артур',mtel:'+998 93 345 67 89',status:'active',contract:3800000,desc:'Уборка банковских залов, переговорных, касс',special:'Кассы — только в присутствии охраны.'},
+    {id:4,name:'Korzinka Юнусабад',city:'Ташкент',addr:'ул. Юнус Раджабий, 2',type:'complex',area:9500,mgr:'Азизов Камол',mtel:'+998 90 111 22 33',status:'active',contract:7100000,desc:'Уборка торгового зала, охрана входа',special:'Пол — каждые 1.5 часа. Санузлы — каждый час.'},
+    {id:5,name:'Завод "УзАвто"',city:'Асака',addr:'Промышленная зона',type:'facility',area:45000,mgr:'Петров Денис',mtel:'+998 97 456 78 90',status:'active',contract:12400000,desc:'Фасилити менеджмент производственных помещений',special:'СИЗ обязателен. Уборка цехов — раз в смену.'},
+    {id:6,name:'Отель Hilton',city:'Ташкент',addr:'ул. Ислама Каримова, 1',type:'cleaning',area:22000,mgr:'Иванова Марина',mtel:'+998 91 234 56 78',status:'active',contract:9600000,desc:'Уборка номеров, коридоров, ресторана',special:'Номера — до 12:00. Lobby — мониторинг 24/7.'},
+  ];
+  db.employees=[
+    {id:1,name:'Мухаммадов Санжар',phone:'+998 90 100 11 22',role:'cleaner',objId:1,sched:'2/2 (07:00–19:00)',paytype:'rate',rate:1800000,hr:0,addr:'Юнусабадский р-н',date:'2023-03-01',status:'active',notes:'ТБ 01.03.2023'},
+    {id:2,name:'Назарова Гулнора',phone:'+998 91 200 22 33',role:'senior',objId:1,sched:'5/2 (09:00–18:00)',paytype:'rate',rate:2400000,hr:0,addr:'Мирабадский р-н',date:'2022-01-15',status:'active',notes:'Старший смены'},
+    {id:3,name:'Ким Владимир',phone:'+998 93 300 33 44',role:'guard',objId:1,sched:'2/2 (19:00–07:00)',paytype:'rate',rate:2200000,hr:0,addr:'Сергелийский р-н',date:'2023-06-01',status:'active',notes:''},
+    {id:4,name:'Юсупова Малика',phone:'+998 94 400 44 55',role:'cleaner',objId:2,sched:'5/2 (09:00–18:00)',paytype:'hourly',rate:0,hr:14000,addr:'Яшнободский р-н',date:'2023-09-01',status:'active',notes:''},
+    {id:5,name:'Рахимов Бехзод',phone:'+998 95 500 55 66',role:'supervisor',objId:2,sched:'5/2 (09:00–18:00)',paytype:'rate',rate:3200000,hr:0,addr:'Чиланзарский р-н',date:'2022-05-10',status:'active',notes:'Супервайзер зоны'},
+    {id:6,name:'Алиева Зилола',phone:'+998 90 600 66 77',role:'cleaner',objId:3,sched:'5/2 (09:00–18:00)',paytype:'rate',rate:1800000,hr:0,addr:'Бектемирский р-н',date:'2024-01-10',status:'vacation',notes:'Отпуск'},
+    {id:7,name:'Тошматов Алишер',phone:'+998 97 700 77 88',role:'cleaner',objId:4,sched:'2/2 (07:00–19:00)',paytype:'rate',rate:1900000,hr:0,addr:'Яккасарайский р-н',date:'2023-11-01',status:'active',notes:''},
+    {id:8,name:'Каримова Дилноза',phone:'+998 99 800 88 99',role:'facility',objId:5,sched:'5/2 (08:00–17:00)',paytype:'rate',rate:2800000,hr:0,addr:'Мирзо-Улугбекский р-н',date:'2023-01-20',status:'active',notes:''},
+  ];
+  db.inventory=[
+    {id:1,name:'Пылесос Karcher VC 5',type:'equipment',objId:1,qty:4,unit:'шт',cond:'ok',notes:'ТО каждые 6 мес.'},
+    {id:2,name:'Поломоечная машина Tennant',type:'equipment',objId:1,qty:1,unit:'шт',cond:'ok',notes:''},
+    {id:3,name:'Domestos гель 5л',type:'supply',objId:1,qty:24,unit:'уп',cond:'low',notes:'Закупать ежемесячно'},
+    {id:4,name:'Швабра МОП',type:'inventory',objId:2,qty:8,unit:'шт',cond:'ok',notes:''},
+    {id:5,name:'Мешки для мусора 120л',type:'hygiene',objId:1,qty:500,unit:'шт',cond:'ok',notes:''},
+    {id:6,name:'Перчатки нитриловые',type:'hygiene',objId:1,qty:200,unit:'шт',cond:'low',notes:'Запас 2 недели'},
+    {id:7,name:'Fairy Professional 5л',type:'supply',objId:2,qty:12,unit:'уп',cond:'ok',notes:''},
+    {id:8,name:'Хлорамин Б',type:'supply',objId:3,qty:10,unit:'кг',cond:'ok',notes:''},
+    {id:9,name:'Туалетная бумага 2-сл',type:'hygiene',objId:1,qty:300,unit:'рул',cond:'ok',notes:''},
+    {id:10,name:'Пылесос Karcher WD4',type:'equipment',objId:5,qty:2,unit:'шт',cond:'repair',notes:'На ремонте с 01.03'},
+  ];
+  db.standards=[
+    {id:1,objId:1,zone:'Центральный атриум / фонтан',priority:'critical',freq:'Каждые 2 часа',desc:'Заказчик проверяет лично каждое утро.'},
+    {id:2,objId:1,zone:'Туалетные комнаты',priority:'critical',freq:'Каждый час',desc:'Журнал уборки обязателен. Бумага и мыло — постоянный контроль.'},
+    {id:3,objId:2,zone:'Лобби / ресепшн',priority:'high',freq:'Каждые 4 часа',desc:'Зеркала и стекло — без разводов.'},
+    {id:4,objId:3,zone:'Кассовые зоны',priority:'critical',freq:'Ежедневно',desc:'Только с охраной.'},
+    {id:5,objId:1,zone:'Эскалаторы и лифты',priority:'high',freq:'Каждые 3 часа',desc:'Перила — дезинфекция. Зеркала — без следов.'},
+  ];
+  db.salary=[
+    {id:1,empId:1,month:m0,days:22,hours:0,bonus:0,ded:0,note:''},
+    {id:2,empId:2,month:m0,days:22,hours:0,bonus:200000,ded:0,note:'Премия'},
+    {id:3,empId:3,month:m0,days:15,hours:0,bonus:0,ded:0,note:''},
+    {id:4,empId:4,month:m0,days:0,hours:168,bonus:0,ded:0,note:''},
+    {id:5,empId:5,month:m0,days:22,hours:0,bonus:0,ded:0,note:''},
+    {id:6,empId:1,month:m1,days:21,hours:0,bonus:0,ded:0,note:''},
+    {id:7,empId:2,month:m1,days:21,hours:0,bonus:300000,ded:0,note:''},
+    {id:8,empId:4,month:m1,days:0,hours:176,bonus:0,ded:50000,note:'Штраф'},
+    {id:9,empId:5,month:m1,days:21,hours:0,bonus:0,ded:0,note:''},
+    {id:10,empId:7,month:m1,days:15,hours:0,bonus:0,ded:0,note:''},
+    {id:11,empId:1,month:m2,days:20,hours:0,bonus:0,ded:0,note:''},
+    {id:12,empId:2,month:m2,days:20,hours:0,bonus:0,ded:0,note:''},
+    {id:13,empId:5,month:m2,days:20,hours:0,bonus:0,ded:0,note:''},
+    {id:14,empId:6,month:m2,days:18,hours:0,bonus:0,ded:0,note:''},
+    {id:15,empId:1,month:m3,days:22,hours:0,bonus:0,ded:0,note:''},
+    {id:16,empId:2,month:m3,days:22,hours:0,bonus:0,ded:0,note:''},
+  ];
+  db.procurement=[
+    {id:1,name:'Domestos 5л x20',cat:'cleaning_supplies',month:m0,amount:1200000,sup:'CleanPro',objId:1,note:''},
+    {id:2,name:'Перчатки нитрил x100',cat:'hygiene',month:m0,amount:450000,sup:'МедСнаб',objId:1,note:''},
+    {id:3,name:'Туалетная бумага x300',cat:'hygiene',month:m0,amount:680000,sup:'PaperMart',objId:1,note:''},
+    {id:4,name:'Доставка товаров',cat:'logistics',month:m0,amount:320000,sup:'FastDelivery',objId:null,note:''},
+    {id:5,name:'Fairy Professional x10',cat:'cleaning_supplies',month:m0,amount:750000,sup:'CleanPro',objId:2,note:''},
+    {id:6,name:'Domestos x18',cat:'cleaning_supplies',month:m1,amount:1100000,sup:'CleanPro',objId:1,note:''},
+    {id:7,name:'Перчатки нитрил x80',cat:'hygiene',month:m1,amount:360000,sup:'МедСнаб',objId:1,note:''},
+    {id:8,name:'Хлорамин Б x10кг',cat:'cleaning_supplies',month:m1,amount:520000,sup:'ХимТрейд',objId:3,note:''},
+    {id:9,name:'Доставка',cat:'logistics',month:m1,amount:290000,sup:'FastDelivery',objId:null,note:''},
+    {id:10,name:'Domestos x15',cat:'cleaning_supplies',month:m2,amount:900000,sup:'CleanPro',objId:1,note:''},
+    {id:11,name:'Туалетная бумага x250',cat:'hygiene',month:m2,amount:570000,sup:'PaperMart',objId:1,note:''},
+    {id:12,name:'Швабра МОП x4',cat:'inventory',month:m2,amount:480000,sup:'ToolMart',objId:2,note:''},
+    {id:13,name:'Доставка',cat:'logistics',month:m2,amount:280000,sup:'FastDelivery',objId:null,note:''},
+  ];
+  db.suppliers=[
+    {id:1,name:'ООО CleanPro Uzbekistan',what:'Моющие средства, дезинфектанты',phone:'+998 71 200 10 20',pay:'bank',cat:'cleaning_supplies',rating:'5',note:'Основной поставщик. Скидка 10% при заказе от 5M сум. Доставка 2-3 дня.'},
+    {id:2,name:'МедСнаб',what:'Перчатки, маски, СИЗ',phone:'+998 90 300 20 30',pay:'mixed',cat:'hygiene',rating:'4',note:'Оплата 50% аванс, 50% по факту.'},
+    {id:3,name:'PaperMart',what:'Туалетная бумага, салфетки, полотенца',phone:'+998 93 400 30 40',pay:'cash',cat:'hygiene',rating:'4',note:''},
+    {id:4,name:'FastDelivery',what:'Логистика, доставка по городу',phone:'+998 97 500 40 50',pay:'cash',cat:'logistics',rating:'3',note:'Иногда задерживают. Альтернатива — Yandex Delivery.'},
+    {id:5,name:'ToolMart',what:'Инвентарь, швабры, вёдра, тележки',phone:'+998 99 600 50 60',pay:'bank',cat:'inventory',rating:'5',note:'Лучшие цены на инвентарь. Есть оптовые скидки.'},
+  ];
+  db.knowledge=[
+    {id:1,title:'Инструкция по уборке туалетных зон',cat:'instruction',type:'doc',url:'https://drive.google.com',desc:'Пошаговая инструкция: средства, последовательность, частота.',role:'cleaner'},
+    {id:2,title:'Онбординг новых сотрудников — чек-лист',cat:'onboarding',type:'doc',url:'https://drive.google.com',desc:'Что нужно сделать в первый день: ТБ, документы, форма, объект.',role:'all'},
+    {id:3,title:'Трудовой договор — шаблон 2024',cat:'hire',type:'doc',url:'https://drive.google.com',desc:'Стандартный договор Alpha Cleaning.',role:'manager'},
+    {id:4,title:'Видео: Работа с поломоечной машиной Tennant',cat:'instruction',type:'vid',url:'https://youtube.com',desc:'Инструктаж по безопасной эксплуатации.',role:'cleaner'},
+    {id:5,title:'Стандарты клининга ТРЦ',cat:'standard',type:'doc',url:'https://drive.google.com',desc:'Требования: зоны, частота, отчётность.',role:'supervisor'},
+  ];
+  saveDB();
+}
+
+// ════ DASHBOARD ════
+function renderDashboard(){
+  const months=getMonths();
+  const sel=document.getElementById('dash-month').value||months[0].val;
+  const selM=months.find(m=>m.val===sel);
+  document.getElementById('dash-period').textContent='Период: '+(selM?.label||'');
+
+  const objs=db.objects, emps=db.employees;
+
+  // ── Donut 1: Объекты по типу ──
+  const typeOrder=[
+    {k:'cleaning',label:'Клининг',color:'#4dff91'},
+    {k:'guard',   label:'Охрана', color:'#47c8ff'},
+    {k:'facility',label:'Управление',color:'#ffb347'},
+    {k:'complex', label:'Комплекс',color:'#e8ff47'},
+    {k:'laundry', label:'Прачка', color:'#c084fc'},
+  ];
+  const typeCounts=typeOrder.map(t=>({...t,n:objs.filter(o=>o.type===t.k).length}));
+  const totalObjs=objs.length||1;
+
+  // ── Donut 2: Сотрудники по должности ──
+  const roleOrder=Object.entries(RL).map(([k,label])=>({k,label}));
+  const roleColors=['#4dff91','#47c8ff','#ffb347','#e8ff47','#c084fc','#ff5757','#ff6b47','#4dffcc','#ffdd57','#aaffdd','#ff8eb5','#7dd3fc','#86efac','#fca5a5','#d8b4fe'];
+  const roleCounts=roleOrder.map((r,i)=>({...r,color:roleColors[i%roleColors.length],n:emps.filter(e=>e.role===r.k).length})).filter(r=>r.n>0);
+  const totalEmps=emps.length||1;
+
+  // ── Donut 3: ОКК по зонам ──
+  const okkData=db.okk||[];
+  const objScores=objs.map(o=>{const s=okkObjectStats(o.id,90);return{name:o.name,score:s};});
+  const okkSegs=[
+    {label:'Зелёная ≥8.5',color:'#4dff91',items:objScores.filter(o=>o.score!==null&&o.score>=8.5)},
+    {label:'Жёлтая 7–8.5', color:'#ffb347',items:objScores.filter(o=>o.score!==null&&o.score>=7&&o.score<8.5)},
+    {label:'Красная <7',   color:'#ff5757',items:objScores.filter(o=>o.score!==null&&o.score<7)},
+    {label:'Нет данных',   color:'#444',   items:objScores.filter(o=>o.score===null)},
+  ];
+  const totalOkk=objs.length||1;
+
+  document.getElementById('dash-donuts').innerHTML=
+    donutCard('Объекты по типу',totalObjs,typeCounts,'объектов')+
+    donutCard('Сотрудники',totalEmps,roleCounts,'сотрудников')+
+    donutCardOKK('Контроль качества',totalOkk,okkSegs);
+
+  // ── OKK smooth line charts (3 separate, 1 row) ──
+  const now=new Date();
+  // Year selector
+  const okkYearEl=document.getElementById('dash-okk-year');
+  const okkYears=getAvailableYears((y,m)=>{
+    const checks=(db.okk||[]).filter(c=>{const d=new Date(c.date);return d.getFullYear()===y&&d.getMonth()+1===m;});
+    return checks.length;
+  });
+  // also add current year always
+  if(!okkYears.includes(now.getFullYear()))okkYears.push(now.getFullYear());
+  okkYears.sort((a,b)=>a-b);
+  const okkYear=parseInt(okkYearEl?.value)||now.getFullYear();
+  fillYearSelect('dash-okk-year',okkYears,okkYear);
+
+  // Build 12 monthly values
+  const objCountVals=Array.from({length:12},(_,i)=>{
+    // objects: use total active count (static snapshot per month)
+    return objs.filter(o=>o.status==='active').length;
+  });
+  const okkScoreVals=Array.from({length:12},(_,i)=>{
+    const m=i+1;
+    const checks=(db.okk||[]).filter(c=>{const d=new Date(c.date);return d.getFullYear()===okkYear&&d.getMonth()+1===m;});
+    const scores=checks.map(c=>okkScore(c)).filter(s=>s!==null);
+    return scores.length?Math.round(scores.reduce((a,b)=>a+b,0)/scores.length*10)/10:null;
+  });
+  const empCountVals=Array.from({length:12},()=>emps.length);
+
+  document.getElementById('dash-okk-linecharts').innerHTML=
+    singleLineChartCard('Кол-во объектов','#4dff91',objCountVals,okkYear)+
+    singleLineChartCard('Балл ОКК','#ff5757',okkScoreVals,okkYear)+
+    singleLineChartCard('Кол-во сотрудников','#ffb347',empCountVals,okkYear);
+
+  // ── OKK bars (топ по выбранному месяцу) ──
+  const [sy,sm]=sel.split('-').map(Number);
+  const mStart=new Date(sy,sm-1,1);const mEnd=new Date(sy,sm,1);
+  const okkForMonth=(db.okk||[]).filter(c=>{const d=new Date(c.date);return d>=mStart&&d<mEnd;});
+
+  const objOKKScores=objs.map(o=>{
+    const checks=okkForMonth.filter(c=>c.objId===o.id);
+    const scores=checks.map(c=>okkScore(c)).filter(s=>s!==null);
+    const avg=scores.length?Math.round(scores.reduce((a,b)=>a+b,0)/scores.length*10)/10:null;
+    return{o,avg};
+  }).filter(x=>x.avg!==null).sort((a,b)=>a.avg-b.avg);
+
+  const worst=objOKKScores.slice(0,3);
+  const best=[...objOKKScores].reverse().slice(0,3);
+
+  document.getElementById('dash-worst-bars').innerHTML=worst.length
+    ?worst.map(({o,avg})=>okkBarRow(o,avg,'var(--red)')).join('')
+    :'<div style="color:var(--text3);font-size:11px;padding:8px 0">Нет проверок за выбранный период</div>';
+
+  document.getElementById('dash-best-bars').innerHTML=best.length
+    ?best.map(({o,avg})=>okkBarRow(o,avg,'var(--green)')).join('')
+    :'<div style="color:var(--text3);font-size:11px;padding:8px 0">Нет проверок за выбранный период</div>';
+
+  // ── Director block ──
+  const finBlock=document.getElementById('dash-fin-block');
+  if(CU.role==='director'){
+    finBlock.style.display='block';
+    renderFinDash(sel, months);
+  } else {
+    finBlock.style.display='none';
+  }
+
+  // ── Recent objects ──
+  document.getElementById('dash-recent').innerHTML=[...objs].slice(-4).reverse().map(objCardHTML).join('')||
+    '<div class="empty"><div class="empty-ico">🏢</div>Нет объектов</div>';
+}
+
+// ── Donut SVG builder ──
+function buildDonutSVG(segments,total){
+  const r=42,cx=55,cy=55,stroke=10;
+  const circ=2*Math.PI*r;
+  let offset=0;
+  let paths='';
+  segments.forEach(seg=>{
+    const pct=(seg.n||0)/total;
+    const dash=pct*circ;
+    const gap=circ-dash;
+    const safeLabel=(seg.label||'').replace(/'/g,'&#39;');
+    paths+=`<circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="${seg.color}" stroke-width="${stroke}"
+      stroke-dasharray="${dash.toFixed(2)} ${gap.toFixed(2)}" stroke-dashoffset="${(-offset*circ).toFixed(2)}"
+      style="cursor:pointer;transition:opacity .2s"
+      onmouseenter="donutHover(this,'${safeLabel}',${seg.n||0})"
+      onmouseleave="donutLeave(this)"/>`;
+    offset+=pct;
+  });
+  return `<svg viewBox="0 0 110 110">${paths}</svg>`;
+}
+
+function donutCard(title,total,segs,unit){
+  const validSegs=segs.filter(s=>s.n>0);
+  const svg=buildDonutSVG(validSegs,total||1);
+  const legend=segs.map(s=>`
+    <div class="donut-leg-row">
+      <div class="donut-leg-dot" style="background:${s.color}"></div>
+      <span>${s.label}</span>
+      <span class="donut-leg-val">${s.n}</span>
+    </div>`).join('');
+  return `<div class="donut-card">
+    <div class="donut-title">${title}</div>
+    <div class="donut-wrap" id="dw-${title.replace(/\s/g,'')}">
+      ${svg}
+      <div class="donut-center">
+        <div class="donut-center-num" id="dc-num-${title.replace(/\s/g,'')}">${total}</div>
+        <div class="donut-center-lbl" id="dc-lbl-${title.replace(/\s/g,'')}">${unit}</div>
+      </div>
+    </div>
+    <div class="donut-legend">${legend}</div>
+  </div>`;
+}
+
+function donutCardOKK(title,total,segs){
+  const validSegs=segs.map(s=>({...s,n:s.items.length})).filter(s=>s.n>0);
+  const svg=buildDonutSVG(validSegs,total||1);
+  const legend=segs.map(s=>`
+    <div class="donut-leg-row" title="${s.items.map(i=>i.name+' '+i.score).join(', ')||'—'}">
+      <div class="donut-leg-dot" style="background:${s.color}"></div>
+      <span>${s.label}</span>
+      <span class="donut-leg-val">${s.items.length}</span>
+    </div>`).join('');
+  return `<div class="donut-card">
+    <div class="donut-title">${title}</div>
+    <div class="donut-wrap">
+      ${svg}
+      <div class="donut-center">
+        <div class="donut-center-num">${total}</div>
+        <div class="donut-center-lbl">объектов</div>
+      </div>
+    </div>
+    <div class="donut-legend">${legend}</div>
+  </div>`;
+}
+
+function donutHover(el,label,val){
+  const wrap=el.closest('.donut-wrap');
+  if(!wrap)return;
+  const numEl=wrap.querySelector('.donut-center-num');
+  const lblEl=wrap.querySelector('.donut-center-lbl');
+  if(numEl)numEl.textContent=val;
+  if(lblEl)lblEl.textContent=label;
+  el.style.opacity='1';
+  wrap.querySelectorAll('circle').forEach(c=>{if(c!==el)c.style.opacity='.3';});
+}
+function donutLeave(el){
+  const wrap=el.closest('.donut-wrap');
+  if(!wrap)return;
+  wrap.querySelectorAll('circle').forEach(c=>c.style.opacity='1');
+}
+
+// ── SVG Smooth Line Chart ──
+const MONTHS_RU=['Янв','Фев','Мар','Апр','Май','Июн','Июл','Авг','Сен','Окт','Ноя','Дек'];
+
+function getAvailableYears(dataFn){
+  // Returns years that have any data from dataFn(year)
+  const now=new Date();
+  const years=[];
+  for(let y=now.getFullYear()-3;y<=now.getFullYear()+1;y++){
+    const hasData=Array.from({length:12},(_,i)=>dataFn(y,i+1)).some(v=>v!==null&&v>0);
+    if(hasData)years.push(y);
+  }
+  if(!years.length)years.push(now.getFullYear());
+  return years;
+}
+
+function fillYearSelect(selId, years, current){
+  const el=document.getElementById(selId);
+  if(!el)return;
+  el.innerHTML=years.map(y=>`<option value="${y}"${y===current?'selected':''}>${y}</option>`).join('');
+}
+
+function buildSmoothLineSVG(datasets, W, H, padL, padR, padT, padB){
+  // datasets: [{label, color, values: [v|null x12]}]
+  // Returns SVG string
+  const allVals=datasets.flatMap(d=>d.values.filter(v=>v!==null));
+  if(!allVals.length)return`<svg viewBox="0 0 ${W} ${H}"><text x="${W/2}" y="${H/2}" text-anchor="middle" fill="#555" font-size="12">Нет данных</text></svg>`;
+
+  const minV=0;
+  const maxV=Math.max(...allVals)*1.15||10;
+  const chartW=W-padL-padR;
+  const chartH=H-padT-padB;
+  const xStep=chartW/11;
+
+  const toX=i=>padL+i*xStep;
+  const toY=v=>padT+chartH-(v-minV)/(maxV-minV)*chartH;
+
+  // Y grid lines
+  const ySteps=5;
+  let gridLines='';
+  for(let i=0;i<=ySteps;i++){
+    const v=minV+(maxV-minV)*i/ySteps;
+    const y=toY(v);
+    const label=maxV>1000?fm(Math.round(v/1000))+'K':maxV>10?Math.round(v):v.toFixed(1);
+    gridLines+=`<line x1="${padL}" y1="${y}" x2="${W-padR}" y2="${y}" stroke="#2e2e2e" stroke-width="1"/>`;
+    gridLines+=`<text x="${padL-6}" y="${y+4}" text-anchor="end" fill="#555" font-size="9" font-family="IBM Plex Mono,monospace">${label}</text>`;
+  }
+
+  // X labels
+  let xLabels='';
+  for(let i=0;i<12;i++){
+    xLabels+=`<text x="${toX(i)}" y="${H-4}" text-anchor="middle" fill="#555" font-size="9" font-family="IBM Plex Mono,monospace">${MONTHS_RU[i]}</text>`;
+  }
+
+  // Lines + markers per dataset
+  let linesHtml='';
+  datasets.forEach(ds=>{
+    // Build bezier path — skip nulls as gaps
+    let path='';
+    let pts=ds.values.map((v,i)=>v!==null?{x:toX(i),y:toY(v),v,i}:null);
+    // segments split by nulls
+    let seg=[];
+    pts.forEach((p,idx)=>{
+      if(p){seg.push(p);}
+      else{if(seg.length>1)path+=smoothPath(seg);else if(seg.length===1)path+=`M${seg[0].x},${seg[0].y}`;seg=[];}
+    });
+    if(seg.length>1)path+=smoothPath(seg);
+    else if(seg.length===1)path+=`M${seg[0].x},${seg[0].y}`;
+
+    // Area fill
+    if(path){
+      // Build area path for fill
+      const validPts=pts.filter(p=>p);
+      if(validPts.length>1){
+        const firstX=validPts[0].x,lastX=validPts[validPts.length-1].x;
+        const areaPath=path+` L${lastX},${padT+chartH} L${firstX},${padT+chartH} Z`;
+        linesHtml+=`<path d="${areaPath}" fill="${ds.color}" fill-opacity="0.07" stroke="none"/>`;
+      }
+      linesHtml+=`<path d="${path}" fill="none" stroke="${ds.color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>`;
+    }
+
+    // Markers
+    pts.forEach(p=>{
+      if(!p)return;
+      const safeLabel=ds.label.replace(/'/g,'&#39;');
+      linesHtml+=`<circle cx="${p.x}" cy="${p.y}" r="4" fill="var(--surface)" stroke="${ds.color}" stroke-width="2"
+        style="cursor:pointer"
+        onmouseenter="lcTooltip(event,'${safeLabel}',${p.v},'${ds.color}')"
+        onmouseleave="lcHide()"/>`;
+    });
+  });
+
+  return`<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet">
+    ${gridLines}${xLabels}${linesHtml}
+  </svg>`;
+}
+
+function smoothPath(pts){
+  if(pts.length<2)return`M${pts[0].x},${pts[0].y}`;
+  let d=`M${pts[0].x},${pts[0].y}`;
+  for(let i=0;i<pts.length-1;i++){
+    const cp1x=pts[i].x+(pts[i+1].x-pts[i].x)*0.4;
+    const cp1y=pts[i].y;
+    const cp2x=pts[i+1].x-(pts[i+1].x-pts[i].x)*0.4;
+    const cp2y=pts[i+1].y;
+    d+=` C${cp1x},${cp1y} ${cp2x},${cp2y} ${pts[i+1].x},${pts[i+1].y}`;
+  }
+  return d;
+}
+
+function lcTooltip(e,label,val,color){
+  const t=document.getElementById('lc-tooltip');
+  const display=typeof val==='number'&&val>1000?fm(val):val;
+  t.innerHTML=`<span style="color:${color}">●</span> ${label}: <b>${display}</b>`;
+  t.style.display='block';
+  t.style.left=(e.clientX+14)+'px';
+  t.style.top=(e.clientY-8)+'px';
+}
+function lcHide(){document.getElementById('lc-tooltip').style.display='none';}
+
+// Single mini-line chart card (for OKK block - 3 separate)
+function singleLineChartCard(label, color, values, year){
+  const nonNull=values.filter(v=>v!==null);
+  const current=nonNull.length?nonNull[nonNull.length-1]:null;
+  const svg=buildSmoothLineSVG([{label,color,values}],320,110,36,10,12,20);
+  return`<div>
+    <div class="linechart-legend">
+      <div class="linechart-leg-item">
+        <div class="linechart-leg-dot" style="background:${color}"></div>
+        <span style="color:var(--text)">${label}</span>
+        <span style="margin-left:8px;font-family:'IBM Plex Mono',monospace;font-weight:600;color:${color}">${current!==null?(typeof current==='number'&&current>1000?fm(current):current):'—'}</span>
+      </div>
+    </div>
+    <div class="linechart-wrap">${svg}</div>
+  </div>`;
+}
+
+// Multi-line chart (for finance block)
+function multiLineChartCard(datasets, year){
+  const legend=datasets.map(d=>`
+    <div class="linechart-leg-item">
+      <div class="linechart-leg-dot" style="background:${d.color}"></div>
+      <span>${d.label}</span>
+    </div>`).join('');
+  const svg=buildSmoothLineSVG(datasets,700,160,60,16,16,24);
+  return`<div>
+    <div class="linechart-legend">${legend}</div>
+    <div class="linechart-wrap">${svg}</div>
+  </div>`;
+}
+
+// ── Mini chart builder (kept for backward compat) ──
+function miniChart(label,values,months,color){
+  return singleLineChartCard(label,color,values);
+}
+
+// ── OKK bar row ──
+function okkBarRow(o,avg,color){
+  return`<div class="okk-bar-row">
+    <div>
+      <div class="okk-bar-name" title="${o.name}">${o.name.length>16?o.name.slice(0,15)+'…':o.name}</div>
+      <div class="okk-bar-mgr" style="color:var(--accent2)">${o.mgr||'—'}</div>
+    </div>
+    <div class="okk-bar-track"><div class="okk-bar-fill" style="width:${Math.round(avg/10*100)}%;background:${color}"></div></div>
+    <div class="okk-bar-score" style="color:${color}">${avg}</div>
+  </div>`;
+}
+
+function getMonthFOT(mv){
+  return db.salary.filter(e=>e.month===mv).reduce((s,e)=>{const emp=empi(e.empId);return s+calcSal(emp,e);},0);
+}
+function getMonthProc(mv){
+  return db.procurement.filter(p=>p.month===mv).reduce((s,p)=>s+(p.amount||0),0);
+}
+
+function renderFinDash(sel, months){
+  const income=db.objects.filter(o=>o.status==='active').reduce((s,o)=>s+(o.contract||0),0);
+  const fot=getMonthFOT(sel);
+  const proc=getMonthProc(sel);
+  const totalExp=fot+proc;
+  const margin=income-totalExp;
+  const marginPct=income?Math.round(margin/income*100):0;
+
+  // ── Fix 5: Donut «Приход» — segments by object, top-3 list ──
+  const incomeObjs=[...db.objects].filter(o=>o.contract>0).sort((a,b)=>b.contract-a.contract);
+  const DONUT_COLORS=['#4dff91','#47c8ff','#ffb347','#e8ff47','#c084fc','#ff5757','#4dffcc','#ff8eb5'];
+  const incomeSegsRaw=incomeObjs.map((o,i)=>({
+    label:o.name,
+    shortLabel:o.name.length>16?o.name.slice(0,15)+'…':o.name,
+    color:DONUT_COLORS[i%DONUT_COLORS.length],
+    n:o.contract,
+    pct:income?Math.round(o.contract/income*100):0
+  }));
+  const totalIncome=income||1;
+  const top3=incomeSegsRaw.slice(0,3);
+  const incomeTop3HTML=top3.map(s=>`
+    <div class="donut-leg-row">
+      <div class="donut-leg-dot" style="background:${s.color}"></div>
+      <span style="font-size:10px">${s.shortLabel}</span>
+      <span class="donut-leg-val">${fm(s.n)}</span>
+    </div>`).join('');
+
+  // ── Fix 6: Donut «Расходы» — segments ФОТ + categories ──
+  const procByCategory={};
+  db.procurement.filter(p=>p.month===sel).forEach(p=>{
+    const cat=PC[p.cat]||p.cat||'Прочее';
+    procByCategory[cat]=(procByCategory[cat]||0)+(p.amount||0);
+  });
+  const expSegs=[
+    {label:'ФОТ',color:'#ff5757',n:fot},
+    ...Object.entries(procByCategory).map(([cat,v],i)=>({label:cat,color:DONUT_COLORS[(i+2)%DONUT_COLORS.length],n:v}))
+  ].filter(s=>s.n>0);
+  const expCatListHTML=expSegs.map(s=>`
+    <div class="donut-leg-row">
+      <div class="donut-leg-dot" style="background:${s.color}"></div>
+      <span style="font-size:10px">${s.label}</span>
+      <span class="donut-leg-val">${fm(s.n)}</span>
+    </div>`).join('');
+
+  // ── Fix 7: Donut «Маржа» ──
+  const marginSegs=[
+    {label:'Маржа',color:'#4dff91',n:Math.max(margin,0)},
+    {label:'Расходы',color:'#ff5757',n:totalExp},
+  ];
+  const marginListHTML=`
+    <div class="donut-leg-row">
+      <div class="donut-leg-dot" style="background:#4dff91"></div>
+      <span>Маржа</span>
+      <span class="donut-leg-val">${fm(margin)}</span>
+    </div>
+    <div class="donut-leg-row">
+      <div class="donut-leg-dot" style="background:#4dff91"></div>
+      <span>Маржа %</span>
+      <span class="donut-leg-val" style="color:#4dff91">${marginPct}%</span>
+    </div>`;
+
+  document.getElementById('dash-fin-donuts').innerHTML=
+    donutCardV2('Приход по объектам', fm(income)+' сум', incomeSegsRaw, totalIncome, incomeTop3HTML)+
+    donutCardV2('Расходы', fm(totalExp)+' сум', expSegs, Math.max(totalExp,1), expCatListHTML)+
+    donutCardV2('Маржа', fm(margin)+' сум', marginSegs, Math.max(income,1), marginListHTML);
+
+  // ── Fix 8: Finance line chart (single, 3 lines) ──
+  const finYearEl=document.getElementById('dash-fin-year');
+  const now=new Date();
+  const finYears=getAvailableYears((y,m)=>{
+    const mv=`${y}-${String(m).padStart(2,'0')}`;
+    return getMonthFOT(mv)+getMonthProc(mv);
+  });
+  if(!finYears.includes(now.getFullYear()))finYears.push(now.getFullYear());
+  finYears.sort((a,b)=>a-b);
+  const finYear=parseInt(finYearEl?.value)||now.getFullYear();
+  fillYearSelect('dash-fin-year',finYears,finYear);
+
+  const incomeVals=Array.from({length:12},()=>Math.round(income/1000));
+  const fotVals=Array.from({length:12},(_,i)=>{
+    const mv=`${finYear}-${String(i+1).padStart(2,'0')}`;
+    return Math.round((getMonthFOT(mv)+getMonthProc(mv))/1000)||null;
+  });
+  const marginVals=Array.from({length:12},(_,i)=>{
+    const mv=`${finYear}-${String(i+1).padStart(2,'0')}`;
+    const exp=getMonthFOT(mv)+getMonthProc(mv);
+    return exp>0?Math.round((income-exp)/1000):null;
+  });
+
+  const finDatasets=[
+    {label:'Приход (тыс. сум)', color:'#4dff91', values:incomeVals},
+    {label:'Расход (тыс. сум)', color:'#ff5757', values:fotVals},
+    {label:'Маржа (тыс. сум)',  color:'#ffb347', values:marginVals},
+  ];
+  document.getElementById('dash-fin-linechart').innerHTML=multiLineChartCard(finDatasets,finYear);
+}
+
+// ── New donut card with custom list HTML ──
+function donutCardV2(title, centerVal, segs, total, listHTML){
+  const validSegs=segs.filter(s=>s.n>0);
+  // Build SVG with hover showing label+sum+pct
+  const r=42,cx=55,cy=55,stroke=10,circ=2*Math.PI*r;
+  let offset=0;
+  let paths='';
+  validSegs.forEach(seg=>{
+    const pct=(seg.n||0)/total;
+    const dash=pct*circ;
+    const gap=circ-dash;
+    const segPct=Math.round(pct*100);
+    const safeLabel=(seg.label||'').replace(/'/g,'&#39;');
+    const safeVal=fm(seg.n||0);
+    paths+=`<circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="${seg.color}" stroke-width="${stroke}"
+      stroke-dasharray="${dash.toFixed(2)} ${gap.toFixed(2)}" stroke-dashoffset="${(-offset*circ).toFixed(2)}"
+      style="cursor:pointer;transition:opacity .2s"
+      onmouseenter="donutHoverFin(this,'${safeLabel}','${safeVal}',${segPct})"
+      onmouseleave="donutLeave(this)"/>`;
+    offset+=pct;
+  });
+  const svg=`<svg viewBox="0 0 110 110" style="transform:rotate(-90deg)">${paths}</svg>`;
+  return `<div class="donut-card">
+    <div class="donut-title">${title}</div>
+    <div class="donut-wrap" style="width:110px;height:110px;position:relative;margin-bottom:14px">
+      ${svg}
+      <div class="donut-center" id="dfc-${title.replace(/\s/g,'')}">
+        <div class="donut-center-num" style="font-size:10px;color:var(--accent);line-height:1.3">${centerVal}</div>
+      </div>
+    </div>
+    <div class="donut-legend">${listHTML}</div>
+  </div>`;
+}
+
+function donutHoverFin(el,label,val,pct){
+  const wrap=el.closest('.donut-wrap');
+  if(!wrap)return;
+  const center=wrap.querySelector('.donut-center');
+  if(center)center.innerHTML=`<div style="font-size:9px;color:var(--accent);text-align:center;line-height:1.4">${label}<br><b>${val}</b><br><span style="color:var(--text3)">${pct}%</span></div>`;
+  el.style.opacity='1';
+  wrap.querySelectorAll('circle').forEach(c=>{if(c!==el)c.style.opacity='.25';});
+}
+
+
+// ════ OBJECTS ════
+function objCardHTML(o){
+  const empCnt=db.employees.filter(e=>e.objId===o.id).length;
+  return `<div class="obj-card" onclick="showObjDetail(${o.id})">
+    <div class="oc-top">
+      <div><div class="oc-name">${o.name}</div><div class="oc-addr">📍 ${o.city}${o.addr?', '+o.addr:''}</div></div>
+      <span class="badge ${SB[o.status]}">${SL[o.status]}</span>
+    </div>
+    <div class="oc-badges">
+      <span class="badge ${TB[o.type]}">${TL[o.type]}</span>
+      ${o.area?`<span class="badge b-gray">${o.area.toLocaleString()} м²</span>`:''}
+    </div>
+    ${o.desc?`<div class="oc-desc">${o.desc}</div>`:''}
+    <div class="oc-footer">
+      <span>👥 ${empCnt} сотр.</span>
+      ${o.mgr?`<span>👤 ${o.mgr}</span>`:''}
+    </div>
+  </div>`;
+}
+
+function renderObjects(){
+  let objs=db.objects;
+  if(objFilt!=='all')objs=objs.filter(o=>o.type===objFilt);
+  document.getElementById('obj-sub').textContent=`${objs.length} объект${objs.length!==1?'ов':''}`;
+  document.getElementById('obj-grid').innerHTML=objs.map(objCardHTML).join('')||'<div class="empty"><div class="empty-ico">🏢</div>Нет объектов</div>';
+  document.getElementById('obj-lv').classList.remove('hidden');
+  document.getElementById('obj-dv').classList.remove('open');
+}
+
+function fObj(t,btn){
+  objFilt=t;
+  document.querySelectorAll('#page-objects .fc').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  renderObjects();
+}
+
+function showObjDetail(id){
+  const o=db.objects.find(x=>x.id===id);if(!o)return;
+  const emps=db.employees.filter(e=>e.objId===id);
+  const inv=db.inventory.filter(i=>i.objId===id);
+  const stds=db.standards.filter(s=>s.objId===id);
+  const isDir=CU.role==='director';
+  document.getElementById('obj-dv').innerHTML=`
+    <button class="back-btn" onclick="backObjs()">← Назад к списку</button>
+    <div class="dv-header">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px">
+        <div>
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:18px;font-weight:600;color:var(--text);margin-bottom:8px">${o.name}</div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px">
+            <span class="badge ${TB[o.type]}">${TL[o.type]}</span>
+            <span class="badge ${SB[o.status]}">${SL[o.status]}</span>
+            ${o.area?`<span class="badge b-gray">${o.area.toLocaleString()} м²</span>`:''}
+          </div>
+          <div style="font-size:12px;color:var(--text2)">📍 ${o.city}${o.addr?', '+o.addr:''}</div>
+          ${isDir&&o.contract?`<div style="font-size:12px;color:var(--green);font-weight:600;margin-top:6px;font-family:'IBM Plex Mono',monospace">💰 Контракт: ${fms(o.contract)}/мес</div>`:''}
+        </div>
+        <button class="btn btn-red btn-sm" onclick="delObj(${id})">🗑 Удалить</button>
+      </div>
+    </div>
+    <div class="dv-grid">
+      <div class="info-block">
+        <div class="ib-title">Реквизиты объекта</div>
+        <div class="ib-row"><span class="ib-l">Менеджер</span><span class="ib-v">${o.mgr||'—'}</span></div>
+        <div class="ib-row"><span class="ib-l">Телефон</span><span class="ib-v" style="font-family:'IBM Plex Mono',monospace;font-size:11px">${o.mtel||'—'}</span></div>
+        <div class="ib-row"><span class="ib-l">Площадь</span><span class="ib-v">${o.area?o.area.toLocaleString()+' м²':'—'}</span></div>
+        <div class="ib-row"><span class="ib-l">Сотрудников</span><span class="ib-v">${emps.length}</span></div>
+        <div class="ib-row"><span class="ib-l">Инвентарь</span><span class="ib-v">${inv.length} позиций</span></div>
+      </div>
+      <div class="info-block">
+        <div class="ib-title">Услуги и требования</div>
+        <div style="padding:12px 14px">
+          ${o.desc?`<p style="font-size:12px;color:var(--text2);line-height:1.6;margin-bottom:10px">${o.desc}</p>`:''}
+          ${o.special?`<div style="background:rgba(255,87,87,.08);border-left:2px solid var(--red);padding:8px 10px;border-radius:2px;font-size:11px;color:var(--red)"><strong>⚠️ Особые требования:</strong><br>${o.special}</div>`:''}
+        </div>
+      </div>
+    </div>
+    ${emps.length?`<div class="slabel" style="margin-bottom:10px">Сотрудники объекта (${emps.length})</div>
+    <div class="accordion" style="margin-bottom:14px"><div class="t-wrap"><table>
+      <thead><tr><th>ФИО</th><th>Должность</th><th>График</th><th>Телефон</th><th>Статус</th></tr></thead>
+      <tbody>${emps.map(e=>`<tr><td><span class="tcell">${e.name}</span></td><td>${RL[e.role]||e.role}</td><td style="font-size:11px;color:var(--text3)">${e.sched||'—'}</td><td class="tmono">${e.phone||'—'}</td><td><span class="badge ${ES[e.status]}">${EL[e.status]}</span></td></tr>`).join('')}
+      </tbody>
+    </table></div></div>`:''}
+    ${stds.length?`<div class="slabel" style="margin-bottom:10px">Стандарты заботы (${stds.length})</div>
+    <div class="info-block" style="margin-bottom:14px">${stds.map((s,i)=>`
+      <div style="display:flex;align-items:flex-start;gap:10px;padding:10px 14px;border-bottom:${i<stds.length-1?'1px solid var(--border)':'none'}">
+        <div style="width:7px;height:7px;border-radius:50%;background:${PRC[s.priority]};flex-shrink:0;margin-top:4px"></div>
+        <div><div style="font-weight:600;font-size:12px;color:var(--text)">${s.zone}</div>
+        <div style="font-size:10px;color:var(--accent2);margin-top:2px;font-family:'IBM Plex Mono',monospace">⏱ ${s.freq}</div>
+        ${s.desc?`<div style="font-size:11px;color:var(--text3);margin-top:3px">${s.desc}</div>`:''}</div>
+      </div>`).join('')}
+    </div>`:''}
+  `;
+  document.getElementById('obj-lv').classList.add('hidden');
+  document.getElementById('obj-dv').classList.add('open');
+}
+function backObjs(){document.getElementById('obj-lv').classList.remove('hidden');document.getElementById('obj-dv').classList.remove('open');}
+function delObj(id){if(!confirm('Удалить объект?'))return;db.objects=db.objects.filter(o=>o.id!==id);saveDB();backObjs();renderObjects();}
+
+// ════ MAP ════
+function renderEmployees(q){
+  q=q||empQ||'';
+  let emps=db.employees;
+  if(q)emps=emps.filter(e=>(e.name+e.phone+(obi(e.objId)?.name||'')).toLowerCase().includes(q.toLowerCase()));
+  document.getElementById('emp-sub').textContent=`${emps.length} сотрудник${emps.length!==1?'ов':''}`;
+  const byObj={};
+  emps.forEach(e=>{const k=e.objId||0;if(!byObj[k])byObj[k]=[];byObj[k].push(e);});
+  let html='';
+  Object.entries(byObj).forEach(([objId,list])=>{
+    const o=obi(parseInt(objId));
+    const act=list.filter(e=>e.status==='active').length;
+    html+=`<div class="accordion">
+      <div class="acc-hd" onclick="toggleAcc(this)">
+        <div class="acc-plus">+</div>
+        <div class="acc-title">${o?o.name:'Без объекта'}</div>
+        <div class="acc-meta">
+          <span class="badge b-green">${act} активных</span>
+          <span class="badge b-gray">${list.length} всего</span>
+          ${o?`<span class="badge ${TB[o.type]}">${TL[o.type]}</span>`:''}
+        </div>
+      </div>
+      <div class="acc-body">
+        <div class="t-wrap"><table>
+          <thead><tr><th>ФИО</th><th>Должность</th><th>График</th><th>Телефон</th><th>Оплата</th><th>Статус</th><th></th></tr></thead>
+          <tbody>${list.map(e=>`<tr>
+            <td><span class="tcell">${e.name}</span></td>
+            <td>${RL[e.role]||e.role}</td>
+            <td style="font-size:11px;color:var(--text3)">${e.sched||'—'}</td>
+            <td class="tmono">${e.phone||'—'}</td>
+            <td style="font-size:11px"><span class="badge b-gray">${e.paytype==='hourly'?fm(e.hr)+'/ч':fm(e.rate)+'/мес'}</span></td>
+            <td><span class="badge ${ES[e.status]}">${EL[e.status]}</span></td>
+            <td><button class="btn btn-red btn-sm" onclick="delEmp(${e.id})">✕</button></td>
+          </tr>`).join('')}</tbody>
+        </table></div>
+      </div>
+    </div>`;
+  });
+  document.getElementById('emp-acc').innerHTML=html||'<div class="empty"><div class="empty-ico">👥</div>Нет сотрудников</div>';
+}
+function empSearch(q){empQ=q;renderEmployees(q);}
+function toggleAcc(hd){const body=hd.nextElementSibling,plus=hd.querySelector('.acc-plus');const o=body.classList.contains('open');body.classList.toggle('open',!o);plus.classList.toggle('open',!o);}
+
+// ════ INVENTORY ════
+function renderInventory(){
+  const byObj={};
+  db.inventory.forEach(i=>{const k=i.objId||0;if(!byObj[k])byObj[k]=[];byObj[k].push(i);});
+  let html='';
+  Object.entries(byObj).forEach(([objId,list])=>{
+    const o=obi(parseInt(objId));
+    const issues=list.filter(i=>i.cond!=='ok').length;
+    html+=`<div class="accordion">
+      <div class="acc-hd" onclick="toggleAcc(this)">
+        <div class="acc-plus">+</div>
+        <div class="acc-title">${o?o.name:'Без объекта'}</div>
+        <div class="acc-meta">
+          <span class="badge b-gray">${list.length} позиций</span>
+          ${issues?`<span class="badge b-red">⚠ ${issues} требуют внимания</span>`:''}
+        </div>
+      </div>
+      <div class="acc-body"><div class="t-wrap"><table>
+        <thead><tr><th>Наименование</th><th>Тип</th><th>Кол-во</th><th>Состояние</th><th>Примечание</th><th></th></tr></thead>
+        <tbody>${list.map(i=>`<tr>
+          <td><span class="tcell">${i.name}</span></td>
+          <td><span class="badge b-gray" style="font-size:9px">${IT[i.type]||i.type}</span></td>
+          <td class="tmono">${i.qty} ${i.unit}</td>
+          <td><span class="badge ${CL[i.cond]}">${CN[i.cond]}</span></td>
+          <td style="font-size:11px;color:var(--text3)">${i.notes||'—'}</td>
+          <td><button class="btn btn-red btn-sm" onclick="delInv(${i.id})">✕</button></td>
+        </tr>`).join('')}</tbody>
+      </table></div></div>
+    </div>`;
+  });
+  document.getElementById('inv-acc').innerHTML=html||'<div class="empty"><div class="empty-ico">📦</div>Инвентарь не добавлен</div>';
+}
+
+// ════ STANDARDS ════
+function renderStandards(){
+  const byObj={};
+  db.standards.forEach(s=>{const k=s.objId||0;if(!byObj[k])byObj[k]=[];byObj[k].push(s);});
+  let html='';
+  Object.entries(byObj).forEach(([objId,list])=>{
+    const o=obi(parseInt(objId));
+    html+=`<div class="info-block" style="margin-bottom:10px">
+      <div class="ib-title">${o?o.name:'Общие'} <span style="margin-left:8px;opacity:.5">(${list.length})</span></div>
+      ${list.map((s,i)=>`<div style="display:flex;align-items:flex-start;gap:10px;padding:10px 14px;border-bottom:${i<list.length-1?'1px solid var(--border)':'none'}">
+        <div style="width:7px;height:7px;border-radius:50%;background:${PRC[s.priority]};flex-shrink:0;margin-top:4px"></div>
+        <div style="flex:1">
+          <div style="font-weight:600;font-size:12px;color:var(--text)">${s.zone}</div>
+          <div style="font-size:10px;color:var(--accent2);margin-top:2px;font-family:'IBM Plex Mono',monospace">⏱ ${s.freq}</div>
+          ${s.desc?`<div style="font-size:11px;color:var(--text3);margin-top:3px">${s.desc}</div>`:''}
+        </div>
+        <button class="btn btn-red btn-sm" onclick="delStd(${s.id})">✕</button>
+      </div>`).join('')}
+    </div>`;
+  });
+  document.getElementById('std-list').innerHTML=html||'<div class="empty"><div class="empty-ico">✨</div>Стандарты не добавлены</div>';
+}
+
+// ════ SALARY ════
+function renderSalary(){
+  const months=getMonths();
+  const sel=document.getElementById('sal-month').value||months[0].val;
+  const prev=months[months.findIndex(m=>m.val===sel)+1]?.val;
+  const entries=db.salary.filter(e=>e.month===sel);
+  const total=entries.reduce((s,e)=>{const emp=empi(e.empId);return s+calcSal(emp,e);},0);
+  const prevTotal=prev?db.salary.filter(e=>e.month===prev).reduce((s,e)=>{const emp=empi(e.empId);return s+calcSal(emp,e);},0):null;
+
+  document.getElementById('sal-stats').innerHTML=`
+    <div class="sc c-yellow"><div class="sc-num">${entries.length}</div><div class="sc-label">Записей в табеле</div></div>
+    <div class="sc c-red"><div class="sc-num" style="font-size:18px">${fm(Math.round(total/1000))}K</div><div class="sc-label">ФОТ за период (сум)</div>${prevTotal!==null?delta(total,prevTotal):''}</div>
+    <div class="sc c-green"><div class="sc-num">${entries.length?fm(Math.round(total/entries.length/1000))+'K':'—'}</div><div class="sc-label">Средняя зарплата (тыс. сум)</div></div>
+  `;
+
+  document.getElementById('sal-tbody').innerHTML=entries.length?entries.map(e=>{
+    const emp=empi(e.empId);if(!emp)return'';
+    const o=obi(emp.objId);
+    const calc=calcSal(emp,e);
+    return`<tr>
+      <td><span class="tcell">${emp.name}</span></td>
+      <td style="font-size:11px;color:var(--text3)">${o?o.name:'—'}</td>
+      <td style="text-align:center;font-family:'IBM Plex Mono',monospace">${e.days||0}</td>
+      <td style="text-align:center;font-family:'IBM Plex Mono',monospace">${e.hours||0}</td>
+      <td style="font-size:11px"><span class="badge b-gray">${emp.paytype==='hourly'?fm(emp.hr)+'/ч':fm(emp.rate)+'/мес'}</span></td>
+      <td style="font-family:'IBM Plex Mono',monospace;font-weight:700;color:var(--green)">${fm(calc)}</td>
+      <td><button class="btn btn-red btn-sm" onclick="delSal(${e.id})">✕</button></td>
+    </tr>`;
+  }).join(''):'<tr><td colspan="7" style="text-align:center;color:var(--text3);padding:24px">Нет записей за этот месяц</td></tr>';
+
+  document.getElementById('sal-card-grid').innerHTML=entries.map(e=>{
+    const emp=empi(e.empId);if(!emp)return'';
+    const o=obi(emp.objId);
+    const base=emp.paytype==='hourly'?(emp.hr||0)*(e.hours||0):(emp.rate||0)*(e.days||0)/22;
+    const total=calcSal(emp,e);
+    return`<div class="sal-card">
+      <div class="sal-name">${emp.name}</div>
+      <div class="sal-obj">${o?o.name:'—'} · ${RL[emp.role]||emp.role}</div>
+      <div class="sal-row"><span>База</span><span>${fm(Math.round(base))}</span></div>
+      ${e.bonus?`<div class="sal-row"><span>Бонус</span><span style="color:var(--green)">+${fm(e.bonus)}</span></div>`:''}
+      ${e.ded?`<div class="sal-row"><span>Удержание</span><span style="color:var(--red)">−${fm(e.ded)}</span></div>`:''}
+      <div class="sal-row"><span>ИТОГО</span><span class="sal-total">${fm(total)}</span></div>
+    </div>`;
+  }).join('')||'<div class="empty"><div class="empty-ico">💰</div>Нет данных</div>';
+}
+
+// ════ PROCUREMENT ════
+function renderProcurement(){
+  const months=getMonths();
+  const sel=document.getElementById('proc-month').value||months[0].val;
+  const prev=months[months.findIndex(m=>m.val===sel)+1]?.val;
+  const entries=db.procurement.filter(p=>p.month===sel);
+  const total=entries.reduce((s,p)=>s+(p.amount||0),0);
+  const prevTotal=prev?db.procurement.filter(p=>p.month===prev).reduce((s,p)=>s+(p.amount||0),0):null;
+
+  document.getElementById('proc-stats').innerHTML=`
+    <div class="sc c-orange"><div class="sc-num" style="font-size:18px">${fm(Math.round(total/1000))}K</div><div class="sc-label">Итого закупки (сум)</div>${prevTotal!==null?delta(total,prevTotal):''}</div>
+    <div class="sc"><div class="sc-num">${entries.length}</div><div class="sc-label">Позиций закуплено</div></div>
+    <div class="sc c-blue"><div class="sc-num">${new Set(entries.map(e=>e.sup)).size}</div><div class="sc-label">Поставщиков</div></div>
+  `;
+
+  const cats=['cleaning_supplies','hygiene','logistics','inventory','other'];
+  let html='';
+  cats.forEach(cat=>{
+    const ce=entries.filter(e=>e.cat===cat);if(!ce.length)return;
+    const ct=ce.reduce((s,e)=>s+(e.amount||0),0);
+    html+=`<div class="proc-cat">
+      <div class="pc-hd"><span class="pc-name">${PI[cat]} ${PC[cat]}</span><span class="pc-total">${fms(ct)}</span></div>
+      <div class="t-wrap"><table>
+        <thead><tr><th>Наименование</th><th>Поставщик</th><th>Объект</th><th>Сумма</th><th>Примечание</th><th></th></tr></thead>
+        <tbody>${ce.map(e=>{const o=e.objId?obi(e.objId):null;return`<tr>
+          <td><span class="tcell">${e.name}</span></td>
+          <td style="font-size:11px;color:var(--text3)">${e.sup||'—'}</td>
+          <td style="font-size:11px;color:var(--text3)">${o?o.name:'Общее'}</td>
+          <td class="tmono">${fm(e.amount)}</td>
+          <td style="font-size:11px;color:var(--text3)">${e.note||'—'}</td>
+          <td><button class="btn btn-red btn-sm" onclick="delProc(${e.id})">✕</button></td>
+        </tr>`;}).join('')}</tbody>
+      </table></div>
+    </div>`;
+  });
+  document.getElementById('proc-cats').innerHTML=html||'<div class="empty"><div class="empty-ico">🛒</div>Нет записей за этот месяц</div>';
+}
+
+// ════ SETTINGS ════
+const RBADGE={director:'b-yellow',manager:'b-blue',recruiter:'b-purple',purchaser:'b-orange',guest:'b-gray'};
+function renderSettings(){
+  document.getElementById('users-tbody').innerHTML=db.users.map(u=>`<tr>
+    <td class="tmono">${u.login}</td>
+    <td><span class="tcell">${u.name||'—'}</span></td>
+    <td><span class="badge ${RBADGE[u.role]||'b-gray'}">${ROLE_LABELS[u.role]||u.role}</span></td>
+    <td style="font-size:11px;color:var(--text3)">${userPages(u.role).map(p=>p.label).join(', ')}</td>
+    <td>${u.login!=='director'?`<button class="btn btn-red btn-sm" onclick="delUser('${u.login}')">✕</button>`:''}</td>
+  </tr>`).join('');
+}
+
+// ════ GLOBAL SEARCH ════
+function globalSearch(q){
+  if(!q){renderObjects();showPage('objects');return;}
+  const ql=q.toLowerCase();
+  const found=db.objects.filter(o=>(o.name+o.city+o.addr+(o.mgr||'')).toLowerCase().includes(ql));
+  showPage('objects');
+  document.getElementById('obj-sub').textContent=`Найдено: ${found.length}`;
+  document.getElementById('obj-grid').innerHTML=found.map(objCardHTML).join('')||`<div class="empty"><div class="empty-ico">🔍</div>По запросу "${q}" ничего не найдено</div>`;
+}
+
+// ════ MODALS ════
+function openM(id){fillSelects();document.getElementById('m-'+id).classList.add('open');}
+function closeM(id){document.getElementById('m-'+id).classList.remove('open');}
+document.querySelectorAll('.modal-bg').forEach(m=>m.addEventListener('click',e=>{if(e.target===m)m.classList.remove('open');}));
+function togglePay(){const t=document.getElementById('ae-ptype').value;document.getElementById('ae-rate-f').style.display=t==='rate'?'flex':'none';document.getElementById('ae-hr-f').style.display=t==='hourly'?'flex':'none';}
+
+// ════ SAVE ════
+function saveObj(){
+  const name=document.getElementById('ao-name').value.trim();if(!name){alert('Введите наименование');return;}
+  const svcs=[];
+  if(document.getElementById('ao-svc-cleaning').checked)svcs.push('Ежедневная уборка');
+  if(document.getElementById('ao-svc-guard').checked)svcs.push('Охрана');
+  if(document.getElementById('ao-svc-facility').checked)svcs.push('Управление объектом');
+  if(document.getElementById('ao-svc-mgmt').checked)svcs.push('Управляющая компания');
+  db.objects.push({id:nid(db.objects),name,city:document.getElementById('ao-city').value.trim()||'Ташкент',addr:document.getElementById('ao-addr').value.trim(),type:document.getElementById('ao-type').value,area:parseInt(document.getElementById('ao-area').value)||0,mgr:document.getElementById('ao-mgr').value.trim(),mtel:document.getElementById('ao-mtel').value.trim(),status:document.getElementById('ao-status').value,contract:parseInt(document.getElementById('ao-contract').value)||0,desc:svcs.join(', '),special:document.getElementById('ao-special').value.trim()});
+  saveDB();closeM('addObj');fillSelects();renderObjects();updateSbStats();
+}
+function saveEmp(){
+  const name=document.getElementById('ae-name').value.trim();if(!name){alert('Введите ФИО');return;}
+  const pt=document.getElementById('ae-ptype').value;
+  db.employees.push({id:nid(db.employees),name,phone:document.getElementById('ae-phone').value.trim(),role:document.getElementById('ae-role').value,objId:parseInt(document.getElementById('ae-obj').value)||null,sched:document.getElementById('ae-sched').value,paytype:pt,rate:pt==='rate'?parseInt(document.getElementById('ae-rate').value)||0:0,hr:pt==='hourly'?parseInt(document.getElementById('ae-hr').value)||0:0,addr:document.getElementById('ae-addr').value.trim(),date:document.getElementById('ae-date').value,status:document.getElementById('ae-status').value,notes:document.getElementById('ae-notes').value.trim()});
+  saveDB();closeM('addEmp');renderEmployees();fillSelects();updateSbStats();
+}
+function saveInv(){
+  const name=document.getElementById('ai-name').value.trim();if(!name){alert('Введите наименование');return;}
+  db.inventory.push({id:nid(db.inventory),name,type:document.getElementById('ai-type').value,objId:parseInt(document.getElementById('ai-obj').value)||null,qty:parseInt(document.getElementById('ai-qty').value)||1,unit:document.getElementById('ai-unit').value,cond:document.getElementById('ai-cond').value,notes:document.getElementById('ai-notes').value.trim()});
+  saveDB();closeM('addInv');renderInventory();updateSbStats();
+}
+function saveStd(){
+  const zone=document.getElementById('as-zone').value.trim();if(!zone){alert('Введите зону');return;}
+  db.standards.push({id:nid(db.standards),objId:parseInt(document.getElementById('as-obj').value)||null,zone,priority:document.getElementById('as-pri').value,freq:document.getElementById('as-freq').value,desc:document.getElementById('as-desc').value.trim()});
+  saveDB();closeM('addStd');renderStandards();
+}
+function saveSal(){
+  const empId=parseInt(document.getElementById('ase-emp').value);if(!empId){alert('Выберите сотрудника');return;}
+  const month=document.getElementById('ase-month').value;
+  db.salary=db.salary.filter(e=>!(e.empId===empId&&e.month===month));
+  db.salary.push({id:nid(db.salary),empId,month,days:parseInt(document.getElementById('ase-days').value)||0,hours:parseInt(document.getElementById('ase-hours').value)||0,bonus:parseInt(document.getElementById('ase-bonus').value)||0,ded:parseInt(document.getElementById('ase-ded').value)||0,note:document.getElementById('ase-note').value.trim()});
+  saveDB();closeM('addSal');renderSalary();
+}
+function saveProc(){
+  const name=document.getElementById('ap-name').value.trim();if(!name){alert('Введите наименование');return;}
+  db.procurement.push({id:nid(db.procurement),name,cat:document.getElementById('ap-cat').value,month:document.getElementById('ap-month').value,amount:parseInt(document.getElementById('ap-amount').value)||0,sup:document.getElementById('ap-sup').value.trim(),objId:parseInt(document.getElementById('ap-obj').value)||null,note:document.getElementById('ap-note').value.trim()});
+  saveDB();closeM('addProc');renderProcurement();
+}
+function saveUser(){
+  const login=document.getElementById('au-login').value.trim(),pass=document.getElementById('au-pass').value;
+  if(!login||!pass){alert('Заполните логин и пароль');return;}
+  if(db.users.find(u=>u.login===login)){alert('Логин уже существует');return;}
+  if(pass.length<6){alert('Пароль минимум 6 символов');return;}
+  db.users.push({login,pass,name:document.getElementById('au-name').value.trim()||login,role:document.getElementById('au-role').value});
+  saveDB();closeM('addUser');renderSettings();
+}
+
+// ════ DELETE ════
+function delObj(id){if(!confirm('Удалить объект?'))return;db.objects=db.objects.filter(o=>o.id!==id);saveDB();backObjs();renderObjects();}
+function delEmp(id){if(!confirm('Удалить сотрудника?'))return;db.employees=db.employees.filter(e=>e.id!==id);saveDB();renderEmployees();}
+function delInv(id){db.inventory=db.inventory.filter(i=>i.id!==id);saveDB();renderInventory();}
+function delStd(id){db.standards=db.standards.filter(s=>s.id!==id);saveDB();renderStandards();}
+function delSal(id){db.salary=db.salary.filter(e=>e.id!==id);saveDB();renderSalary();}
+function delProc(id){db.procurement=db.procurement.filter(p=>p.id!==id);saveDB();renderProcurement();}
+function delUser(login){if(!confirm('Удалить пользователя?'))return;db.users=db.users.filter(u=>u.login!==login);saveDB();renderSettings();}
+
+// ════ TABS ════
+function swTab(prefix,name,btn){
+  const pg=document.getElementById('page-'+prefix==='sal'?'salary':'procurement');
+  document.querySelectorAll(`#page-${prefix==='sal'?'salary':'procurement'} .tab`).forEach(t=>t.classList.remove('active'));
+  btn.classList.add('active');
+  document.querySelectorAll(`[id^="${prefix}-"]`).forEach(t=>{if(t.classList.contains('tp'))t.classList.remove('active');});
+  document.getElementById(`${prefix}-${name}`).classList.add('active');
+}
+
+// ════ MAP (Leaflet + OpenStreetMap) ════
+let leafletMap = null;
+
+const CITY_COORDS = {
+  'Ташкент':[41.2995,69.2401],'Самарканд':[39.6542,66.9597],
+  'Бухара':[39.7747,64.4286],'Наманган':[41.0011,71.6728],
+  'Андижан':[40.7821,72.3442],'Фергана':[40.3864,71.7864],
+  'Нукус':[42.4600,59.6166],'Асака':[40.6428,72.2369],
+  'Карши':[38.8600,65.7897],'Термез':[37.2247,67.2783],
+};
+const DOT_HEX = {cleaning:'#4dff91',guard:'#47c8ff',facility:'#ffb347',complex:'#e8ff47',laundry:'#c084fc'};
+
+function getCityCoords(city){
+  for(const [k,v] of Object.entries(CITY_COORDS)){
+    if(city && city.includes(k)) return v;
+  }
+  return [41.2995,69.2401]; // Ташкент по умолчанию
+}
+
+function renderMap(){
+  const dotColors={cleaning:'var(--green)',guard:'var(--accent2)',facility:'var(--orange)',complex:'var(--accent)',laundry:'var(--purple)'};
+
+  // ── Leaflet map ──
+  setTimeout(()=>{
+    if(typeof L === 'undefined') return;
+    const container = document.getElementById('osm-map');
+    if(!container) return;
+
+    // Destroy old map instance
+    if(leafletMap){ leafletMap.remove(); leafletMap=null; }
+
+    leafletMap = L.map('osm-map',{zoomControl:true}).setView([41.2995,69.2401],11);
+
+    // Dark tile layer from CartoDB
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',{
+      attribution:'© OpenStreetMap © CartoDB',
+      subdomains:'abcd', maxZoom:19
+    }).addTo(leafletMap);
+
+    // Add markers for each object
+    db.objects.forEach(o=>{
+      const coords = getCityCoords(o.city||'');
+      const color = DOT_HEX[o.type]||'#888';
+      const icon = L.divIcon({
+        className:'',
+        html:`<div style="width:14px;height:14px;border-radius:50%;background:${color};border:2px solid #000;box-shadow:0 0 6px ${color}88"></div>`,
+        iconSize:[14,14], iconAnchor:[7,7]
+      });
+      const marker = L.marker(coords, {icon}).addTo(leafletMap);
+      marker.bindPopup(`
+        <div style="font-family:'IBM Plex Sans',sans-serif;min-width:180px">
+          <div style="font-weight:700;font-size:13px;margin-bottom:4px">${o.name}</div>
+          <div style="font-size:11px;color:#888;margin-bottom:6px">📍 ${o.city}${o.addr?', '+o.addr:''}</div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap">
+            <span style="background:${color}22;color:${color};border:1px solid ${color}44;border-radius:2px;padding:2px 7px;font-size:10px;font-family:monospace">${TL[o.type]||o.type}</span>
+            ${o.mgr?`<span style="font-size:10px;color:#47c8ff">👤 ${o.mgr}</span>`:''}
+          </div>
+          <div style="margin-top:8px">
+            <a href="https://yandex.uz/maps/?text=${encodeURIComponent((o.city||'')+(o.addr?', '+o.addr:''))}" target="_blank" style="font-size:10px;color:#47c8ff;text-decoration:none">🗺 Открыть в Яндекс Картах →</a>
+          </div>
+        </div>
+      `,{maxWidth:260});
+    });
+
+    // Fit map to markers if objects exist
+    if(db.objects.length > 0){
+      const coords = db.objects.map(o=>getCityCoords(o.city||''));
+      if(coords.length === 1){
+        leafletMap.setView(coords[0], 13);
+      } else {
+        leafletMap.fitBounds(L.latLngBounds(coords).pad(0.2));
+      }
+    }
+  }, 100);
+
+  // ── Card list ──
+  document.getElementById('map-grid').innerHTML = db.objects.map(o=>`
+    <div class="map-pin" onclick="if(leafletMap){const c=getCityCoords('${(o.city||'').replace(/'/g,"\\'")}');leafletMap.setView(c,15);}">
+      <div class="pin-dot" style="background:${dotColors[o.type]||'#888'}"></div>
+      <div>
+        <div style="font-weight:600;font-size:12px;color:var(--text)">${o.name}</div>
+        <div style="font-size:10px;color:var(--text3);margin-top:2px">${o.city}${o.addr?', '+o.addr:''}</div>
+        <div style="margin-top:5px;display:flex;gap:6px;align-items:center">
+          <span class="badge ${TB[o.type]||'b-gray'}" style="font-size:9px">${TL[o.type]||o.type}</span>
+          <a href="https://yandex.uz/maps/?text=${encodeURIComponent((o.city||'')+(o.addr?', '+o.addr:''))}" target="_blank" style="font-size:9px;color:var(--accent2);text-decoration:none">🗺 Открыть →</a>
+        </div>
+      </div>
+    </div>`).join('')||'<div style="color:var(--text3);font-size:12px">Нет объектов</div>';
+}
+
+function openYandex(addr,name){
+  window.open(`https://yandex.uz/maps/?text=${addr}&z=16`,'_blank');
+}
+function openAllInYandex(){
+  const q=db.objects.map(o=>o.city+(o.addr?', '+o.addr:'')).join('; ');
+  window.open(`https://yandex.uz/maps/?text=${encodeURIComponent(q)}`,'_blank');
+}
+
+
+// ════ SUPPLIERS ════
+let supQ='';
+function renderSuppliers(q){
+  q=q||supQ;
+  let sups=db.suppliers||[];
+  if(q)sups=sups.filter(s=>(s.name+s.what+s.phone).toLowerCase().includes(q.toLowerCase()));
+  document.getElementById('sup-stats').innerHTML=`
+    <div class="sc c-blue"><div class="sc-num">${(db.suppliers||[]).length}</div><div class="sc-label">Всего поставщиков</div></div>
+    <div class="sc c-green"><div class="sc-num">${(db.suppliers||[]).filter(s=>s.rating>='4').length}</div><div class="sc-label">Надёжных (4-5 ★)</div></div>
+    <div class="sc c-orange"><div class="sc-num">${new Set((db.suppliers||[]).map(s=>s.cat)).size}</div><div class="sc-label">Категорий товаров</div></div>
+  `;
+  const PAY={cash:'Наличные',bank:'Банк. перевод',card:'Карта',mixed:'Смешанный'};
+  const STARS={'5':'⭐⭐⭐⭐⭐','4':'⭐⭐⭐⭐','3':'⭐⭐⭐','2':'⭐⭐'};
+  document.getElementById('sup-grid').innerHTML=sups.map((s,i)=>`
+    <div class="sup-card">
+      <div class="sup-num"># ${String(i+1).padStart(3,'0')}</div>
+      <div class="sup-name">${s.name}</div>
+      <div class="sup-row"><span class="sup-ico">📦</span><span>${s.what||'—'}</span></div>
+      <div class="sup-row"><span class="sup-ico">📞</span><span style="font-family:'IBM Plex Mono',monospace;font-size:11px">${s.phone||'—'}</span></div>
+      <div class="sup-row"><span class="sup-ico">💳</span><span>${PAY[s.pay]||s.pay||'—'}</span></div>
+      <div class="sup-row"><span class="sup-ico">⭐</span><span>${STARS[s.rating]||'—'}</span></div>
+      ${s.note?`<div style="font-size:11px;color:var(--text3);margin-top:8px;padding-top:8px;border-top:1px solid var(--border);line-height:1.5">${s.note}</div>`:''}
+      <div style="margin-top:10px;display:flex;gap:6px">
+        <span class="badge ${PC[s.cat]?'b-gray':'b-gray'}" style="font-size:9px">${PC[s.cat]||s.cat||'—'}</span>
+        <button class="btn btn-red btn-sm" style="margin-left:auto" onclick="delSup(${s.id})">✕</button>
+      </div>
+    </div>`).join('')||'<div class="empty" style="grid-column:1/-1"><div class="empty-ico">🤝</div>Поставщики не добавлены</div>';
+}
+function searchSup(q){supQ=q;renderSuppliers(q);}
+function saveSup(){
+  const name=document.getElementById('sup-name').value.trim();if(!name){alert('Введите наименование');return;}
+  if(!db.suppliers)db.suppliers=[];
+  db.suppliers.push({id:nid(db.suppliers),name,what:document.getElementById('sup-what').value.trim(),phone:document.getElementById('sup-phone').value.trim(),pay:document.getElementById('sup-pay').value,cat:document.getElementById('sup-cat').value,rating:document.getElementById('sup-rating').value,note:document.getElementById('sup-note').value.trim()});
+  saveDB();closeM('addSup');renderSuppliers();
+}
+function delSup(id){if(!db.suppliers)return;db.suppliers=db.suppliers.filter(s=>s.id!==id);saveDB();renderSuppliers();}
+
+// ════ KNOWLEDGE BASE ════
+let kbFilter='all';
+const KB_ICONS={doc:'📄',vid:'🎬',img:'🖼',lnk:'🔗'};
+const KB_CATS={onboarding:'👋 Онбординг',instruction:'📋 Инструкция',hire:'📄 Найм',standard:'✨ Стандарт',other:'📁 Прочее'};
+const KB_ROLES={all:'Все',cleaner:'Уборщики',guard:'Охранники',supervisor:'Супервайзеры',manager:'Менеджеры'};
+function renderKnowledge(){
+  let items=db.knowledge||[];
+  if(kbFilter!=='all')items=items.filter(k=>k.cat===kbFilter);
+  document.getElementById('kb-grid').innerHTML=items.map(k=>`
+    <div class="kb-card" onclick="openKb('${k.url}')">
+      <div class="kb-card-top">
+        <div class="kb-icon ${k.type}">${KB_ICONS[k.type]||'📁'}</div>
+        <div><div class="kb-title">${k.title}</div><div style="font-size:10px;color:var(--accent2);margin-top:2px;font-family:'IBM Plex Mono',monospace">${KB_CATS[k.cat]||k.cat}</div></div>
+      </div>
+      ${k.desc?`<div class="kb-desc">${k.desc}</div>`:''}
+      <div class="kb-footer">
+        <span class="badge b-gray" style="font-size:9px">${KB_ROLES[k.role]||k.role}</span>
+        <div style="display:flex;gap:6px">
+          <span style="font-size:11px;color:var(--accent2)">Открыть →</span>
+          <button class="btn btn-red btn-sm" onclick="event.stopPropagation();delKb(${k.id})">✕</button>
+        </div>
+      </div>
+    </div>`).join('')||'<div class="empty" style="grid-column:1/-1"><div class="empty-ico">📚</div>Материалы не добавлены</div>';
+}
+function filterKb(cat,btn){kbFilter=cat;document.querySelectorAll('#kb-cat-tabs .fc').forEach(b=>b.classList.remove('active'));btn.classList.add('active');renderKnowledge();}
+function openKb(url){if(url)window.open(url,'_blank');}
+function saveKb(){
+  const title=document.getElementById('kb-title').value.trim(),url=document.getElementById('kb-url').value.trim();
+  if(!title||!url){alert('Введите название и ссылку');return;}
+  if(!db.knowledge)db.knowledge=[];
+  db.knowledge.push({id:nid(db.knowledge),title,cat:document.getElementById('kb-cat').value,type:document.getElementById('kb-type').value,url,desc:document.getElementById('kb-desc').value.trim(),role:document.getElementById('kb-role').value});
+  saveDB();closeM('addKb');renderKnowledge();
+}
+function delKb(id){if(!db.knowledge)return;db.knowledge=db.knowledge.filter(k=>k.id!==id);saveDB();renderKnowledge();}
+
+// ════ BULK SALARY ════
+function loadBulkEmps(){
+  const objId=parseInt(document.getElementById('bulk-obj').value)||null;
+  const emps=objId?db.employees.filter(e=>e.objId===objId):db.employees;
+  const month=document.getElementById('bulk-month').value||getMonths()[0].val;
+  document.getElementById('bulk-tbody').innerHTML=emps.map(e=>{
+    const ex=db.salary.find(s=>s.empId===e.id&&s.month===month);
+    return`<tr data-emp="${e.id}">
+      <td style="font-weight:600;font-size:12px;color:var(--text)">${e.name}</td>
+      <td style="font-size:11px;color:var(--text3)">${RL[e.role]||e.role}</td>
+      <td style="font-size:11px"><span class="badge b-gray">${e.paytype==='hourly'?fm(e.hr)+'/ч':fm(e.rate)+'/мес'}</span></td>
+      <td><input class="bulk-input" type="number" name="days" min="0" max="31" value="${ex?.days||''}" placeholder="${e.paytype==='rate'?'дней':'—'}"></td>
+      <td><input class="bulk-input" type="number" name="hours" min="0" value="${ex?.hours||''}" placeholder="${e.paytype==='hourly'?'часов':'—'}"></td>
+      <td><input class="bulk-input" type="number" name="bonus" min="0" value="${ex?.bonus||''}" placeholder="0"></td>
+    </tr>`;
+  }).join('')||'<tr><td colspan="6" style="text-align:center;color:var(--text3);padding:20px">Выберите объект</td></tr>';
+}
+function fillAllDays(){
+  const d=document.getElementById('bulk-fill-days').value;
+  const h=document.getElementById('bulk-fill-hours').value;
+  document.querySelectorAll('#bulk-tbody tr').forEach(tr=>{
+    if(d)tr.querySelector('[name="days"]').value=d;
+    if(h)tr.querySelector('[name="hours"]').value=h;
+  });
+}
+function saveBulkSal(){
+  const month=document.getElementById('bulk-month').value||getMonths()[0].val;
+  const rows=document.querySelectorAll('#bulk-tbody tr[data-emp]');
+  rows.forEach(tr=>{
+    const empId=parseInt(tr.dataset.emp);
+    const days=parseInt(tr.querySelector('[name="days"]').value)||0;
+    const hours=parseInt(tr.querySelector('[name="hours"]').value)||0;
+    const bonus=parseInt(tr.querySelector('[name="bonus"]').value)||0;
+    if(days||hours){
+      db.salary=db.salary.filter(s=>!(s.empId===empId&&s.month===month));
+      db.salary.push({id:nid(db.salary),empId,month,days,hours,bonus,ded:0,note:'Массовый ввод'});
+    }
+  });
+  saveDB();closeM('bulkSal');renderSalary();
+  alert(`✅ Сохранено ${rows.length} записей`);
+}
+
+// ════ OKK MODULE ════
+const OKK_ZONES=['entrance','bathrooms','workzones','floors','glass'];
+const OKK_ZONE_LABELS={entrance:'Входная зона',bathrooms:'Санузлы',workzones:'Рабочие зоны',floors:'Полы',glass:'Стекло'};
+const OKK_SCORE_MAP={'Отлично':9.5,'Хорошо':7.5,'Удовлетворительно':5.5};
+const OKK_TYPE_LABELS={planned:'Плановая',repeat:'Повторная',unplanned:'Внеплановая'};
+
+// Sample OKK data (demo — real data comes from Google Sheets)
+function loadOKKSample(){
+  if(db.okk&&db.okk.length)return;
+  const now=new Date();
+  const mkDate=(daysAgo)=>{const d=new Date(now);d.setDate(d.getDate()-daysAgo);return d.toISOString().split('T')[0];};
+  db.okk=[
+    {id:1,objId:1,date:mkDate(3),type:'planned',entrance:'Отлично',bathrooms:'Хорошо',workzones:'Отлично',floors:'Хорошо',glass:'Отлично',supplies:'Хорошо',appearance:'Отлично',client_note:'',comment:'Всё в порядке',photo:'',inspector:'Менеджер ОКК'},
+    {id:2,objId:1,date:mkDate(35),type:'planned',entrance:'Хорошо',bathrooms:'Удовлетворительно',workzones:'Хорошо',floors:'Хорошо',glass:'Хорошо',supplies:'Хорошо',appearance:'Хорошо',client_note:'',comment:'Санузлы требуют внимания',photo:'',inspector:'Менеджер ОКК'},
+    {id:3,objId:2,date:mkDate(5),type:'planned',entrance:'Хорошо',bathrooms:'Хорошо',workzones:'Удовлетворительно',workzones_note:'',floors:'Удовлетворительно',glass:'Хорошо',supplies:'Хорошо',appearance:'Хорошо',client_note:'Жалобы на полы',comment:'Нужна повторная уборка полов',photo:'',inspector:'Менеджер ОКК'},
+    {id:4,objId:2,date:mkDate(40),type:'repeat',entrance:'Хорошо',bathrooms:'Хорошо',workzones:'Хорошо',floors:'Хорошо',glass:'Удовлетворительно',supplies:'Хорошо',appearance:'Хорошо',client_note:'',comment:'',photo:'',inspector:'Менеджер ОКК'},
+    {id:5,objId:3,date:mkDate(60),type:'planned',entrance:'Удовлетворительно',bathrooms:'Удовлетворительно',workzones:'Удовлетворительно',floors:'Удовлетворительно',glass:'Удовлетворительно',supplies:'Хорошо',appearance:'Хорошо',client_note:'Много замечаний',comment:'Объект требует усиленного контроля',photo:'',inspector:'Менеджер ОКК'},
+    {id:6,objId:4,date:mkDate(2),type:'planned',entrance:'Отлично',bathrooms:'Отлично',workzones:'Отлично',floors:'Хорошо',glass:'Отлично',supplies:'Отлично',appearance:'Отлично',client_note:'',comment:'Отличная работа',photo:'',inspector:'Менеджер ОКК'},
+    {id:7,objId:4,date:mkDate(33),type:'planned',entrance:'Отлично',bathrooms:'Хорошо',workzones:'Отлично',floors:'Отлично',glass:'Отлично',supplies:'Отлично',appearance:'Отлично',client_note:'',comment:'',photo:'',inspector:'Менеджер ОКК'},
+    {id:8,objId:5,date:mkDate(7),type:'unplanned',entrance:'Хорошо',bathrooms:'Удовлетворительно',workzones:'Хорошо',floors:'Хорошо',glass:'Хорошо',supplies:'Хорошо',appearance:'Хорошо',client_note:'',comment:'',photo:'',inspector:'Менеджер ОКК'},
+    {id:9,objId:6,date:mkDate(15),type:'planned',entrance:'Отлично',bathrooms:'Отлично',workzones:'Отлично',floors:'Отлично',glass:'Хорошо',supplies:'Отлично',appearance:'Отлично',client_note:'',comment:'',photo:'',inspector:'Менеджер ОКК'},
+  ];
+  db.suppliers=db.suppliers||[];
+  saveDB();
+}
+
+function okkScore(check){
+  const vals=OKK_ZONES.map(z=>OKK_SCORE_MAP[check[z]]).filter(v=>v!==undefined);
+  if(!vals.length)return null;
+  return Math.round(vals.reduce((a,b)=>a+b,0)/vals.length*10)/10;
+}
+
+function okkObjectStats(objId,days){
+  const cutoff=new Date();cutoff.setDate(cutoff.getDate()-days);
+  const checks=(db.okk||[]).filter(c=>c.objId===objId&&new Date(c.date)>=cutoff);
+  if(!checks.length)return null;
+  const scores=checks.map(c=>okkScore(c)).filter(s=>s!==null);
+  return scores.length?Math.round(scores.reduce((a,b)=>a+b,0)/scores.length*10)/10:null;
+}
+
+function okkZone(score){
+  if(score===null||score===undefined)return 'none';
+  if(score>=8.5)return 'green';
+  if(score>=7.0)return 'yellow';
+  return 'red';
+}
+
+function okkBadge(zone){
+  const map={green:'<span class="badge b-green">🟢 Стабильно</span>',yellow:'<span class="badge b-orange">🟡 Внимание</span>',red:'<span class="badge b-red">🔴 Зона риска</span>',none:'<span class="badge" style="background:rgba(255,255,255,.07);color:var(--text3)">— Нет данных</span>'};
+  return map[zone]||map.none;
+}
+
+let okkChartMonths=6;
+function okkChartPeriod(n,btn){okkChartMonths=n;}
+
+function renderOKKDynChart(){
+  const now=new Date();
+  const years=getAvailableYears((y,m)=>{
+    return (db.okk||[]).filter(c=>{const d=new Date(c.date);return d.getFullYear()===y&&d.getMonth()+1===m;}).length;
+  });
+  if(!years.includes(now.getFullYear()))years.push(now.getFullYear());
+  years.sort((a,b)=>a-b);
+  const selYear=parseInt(document.getElementById('okk-dyn-year')?.value)||now.getFullYear();
+  fillYearSelect('okk-dyn-year',years,selYear);
+
+  const values=Array.from({length:12},(_,i)=>{
+    const m=i+1;
+    const checks=(db.okk||[]).filter(c=>{const d=new Date(c.date);return d.getFullYear()===selYear&&d.getMonth()+1===m;});
+    const scores=checks.map(c=>okkScore(c)).filter(s=>s!==null);
+    return scores.length?Math.round(scores.reduce((a,b)=>a+b,0)/scores.length*10)/10:null;
+  });
+  const svg=buildSmoothLineSVG([{label:'Средний балл ОКК',color:'#ff5757',values}],480,130,36,10,12,20);
+  document.getElementById('okk-dyn-chart').innerHTML=svg;
+}
+
+// ── AI Analyst ──
+function getOKKAICacheKey(){
+  const now=new Date();
+  const prev=new Date(now.getFullYear(),now.getMonth()-1,1);
+  return`okk_ai_${prev.getFullYear()}_${prev.getMonth()+1}`;
+}
+
+function getPrevMonthLabel(){
+  const now=new Date();
+  const prev=new Date(now.getFullYear(),now.getMonth()-1,1);
+  return prev.toLocaleDateString('ru-RU',{month:'long',year:'numeric'});
+}
+
+function getPrevMonthData(){
+  const now=new Date();
+  const y=now.getMonth()===0?now.getFullYear()-1:now.getFullYear();
+  const m=now.getMonth()===0?12:now.getMonth();
+  const start=new Date(y,m-1,1);
+  const end=new Date(y,m,1);
+  const checks=(db.okk||[]).filter(c=>{const d=new Date(c.date);return d>=start&&d<end;});
+  const objStats=db.objects.map(o=>{
+    const objChecks=checks.filter(c=>c.objId===o.id);
+    const scores=objChecks.map(c=>okkScore(c)).filter(s=>s!==null);
+    const avg=scores.length?Math.round(scores.reduce((a,b)=>a+b,0)/scores.length*10)/10:null;
+    const zoneProblems=OKK_ZONES.map(z=>{
+      const vs=objChecks.map(c=>OKK_SCORE_MAP[c[z]]).filter(v=>v!==undefined);
+      const za=vs.length?Math.round(vs.reduce((a,b)=>a+b,0)/vs.length*10)/10:null;
+      return{zone:OKK_ZONE_LABELS[z],score:za};
+    });
+    return{name:o.name,mgr:o.mgr||'—',score:avg,checks:objChecks.length,problems:zoneProblems};
+  });
+  return{month:`${y}-${m}`,objects:objStats,total:checks.length};
+}
+
+async function runOKKAI(force=false){
+  const btn=document.getElementById('okk-ai-btn');
+  const result=document.getElementById('okk-ai-result');
+  const cacheKey=getOKKAICacheKey();
+
+  // Check cache first
+  if(!force){
+    const cached=localStorage.getItem(cacheKey);
+    if(cached){result.innerHTML=cached;return;}
+  }
+
+  // Check proxy URL configured
+  const proxyUrl=localStorage.getItem('ai_proxy_url')||'';
+  if(!proxyUrl){
+    result.innerHTML=`
+      <div style="background:rgba(232,255,71,.06);border:1px solid rgba(232,255,71,.2);border-radius:4px;padding:14px;font-size:12px;line-height:1.8">
+        <div style="color:var(--accent);font-weight:600;margin-bottom:8px">⚙️ Требуется настройка прокси для ИИ</div>
+        <div style="color:var(--text2);margin-bottom:10px">Из-за ограничений браузера запросы к ИИ идут через Cloudflare Worker. Настройка занимает 3 минуты:</div>
+        <div style="color:var(--text2)">
+          1. Откройте <a href="https://workers.cloudflare.com" target="_blank" style="color:var(--accent2)">workers.cloudflare.com</a> → войдите / зарегистрируйтесь бесплатно<br>
+          2. Нажмите <b>Create Worker</b> → вставьте готовый код (кнопка ниже)<br>
+          3. Нажмите <b>Deploy</b> → скопируйте URL вида <code style="color:var(--accent)">https://xxx.workers.dev</code><br>
+          4. Вставьте URL в поле ниже и сохраните
+        </div>
+        <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+          <button class="btn btn-ghost btn-sm" onclick="copyWorkerCode()">📋 Скопировать код Worker</button>
+          <input id="ai-proxy-input" type="text" placeholder="https://your-worker.workers.dev"
+            style="background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:6px 10px;border-radius:var(--r);font-size:11px;font-family:'IBM Plex Mono',monospace;outline:none;flex:1;min-width:240px">
+          <button class="btn btn-sm" onclick="saveProxyUrl()">Сохранить</button>
+        </div>
+      </div>`;
+    return;
+  }
+
+  btn.disabled=true; btn.textContent='⏳ Анализирую...';
+  result.innerHTML='<span style="color:var(--text3)">ИИ анализирует данные ОКК за '+getPrevMonthLabel()+'...</span>';
+
+  const data=getPrevMonthData();
+  const monthLabel=getPrevMonthLabel();
+
+  const prompt=`Ты аналитик системы контроля качества клининговой компании ALPHA CLEANING.
+Проанализируй данные ОКК за ${monthLabel} и дай структурированный отчёт на русском языке.
+
+Данные по объектам:
+${data.objects.map(o=>`- ${o.name} (менеджер: ${o.mgr}): балл ${o.score??'нет данных'}, проверок: ${o.checks}${o.problems.filter(p=>p.score!==null).length?', зоны: '+o.problems.filter(p=>p.score!==null).map(p=>p.zone+' '+p.score).join(', '):'.'}`).join('\n')}
+
+Используй строго этот формат:
+
+🔴 ТРЕБУЮТ НЕМЕДЛЕННОГО ВНИМАНИЯ
+• [объект] — балл X.X — проблема: [зона]
+  → Рекомендация: ...
+
+🟡 ТРЕБУЮТ КОНТРОЛЯ
+• [объект] — балл X.X
+  → Рекомендация: ...
+
+🟢 СТАБИЛЬНЫЕ ОБЪЕКТЫ
+• [объект] — балл X.X ✓
+
+💡 СИСТЕМНЫЕ ВЫВОДЫ
+[2-3 конкретных вывода]`;
+
+  try{
+    const resp=await fetch(proxyUrl,{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        model:'claude-sonnet-4-20250514',
+        max_tokens:1000,
+        messages:[{role:'user',content:prompt}]
+      })
+    });
+    const json=await resp.json();
+    const text=json.content?.[0]?.text||'Ошибка получения ответа';
+    const html=text
+      .replace(/🔴/g,'<span style="color:var(--red)">🔴</span>')
+      .replace(/🟡/g,'<span style="color:var(--orange)">🟡</span>')
+      .replace(/🟢/g,'<span style="color:var(--green)">🟢</span>')
+      .replace(/💡/g,'<span style="color:var(--accent)">💡</span>')
+      .replace(/→/g,'<span style="color:var(--accent2)">→</span>')
+      .replace(/\n/g,'<br>');
+    localStorage.setItem(cacheKey,html);
+    result.innerHTML=html;
+  }catch(e){
+    result.innerHTML=`<span style="color:var(--red)">Ошибка: ${e.message}. Проверьте URL прокси.</span>
+      <div style="margin-top:8px"><button class="btn btn-ghost btn-sm" onclick="localStorage.removeItem('ai_proxy_url');runOKKAI(true)">⚙️ Перенастроить прокси</button></div>`;
+  }
+  btn.disabled=false; btn.textContent='🔄 Обновить анализ';
+}
+
+function saveProxyUrl(){
+  const v=document.getElementById('ai-proxy-input')?.value?.trim();
+  if(!v){alert('Введите URL');return;}
+  localStorage.setItem('ai_proxy_url',v);
+  runOKKAI(true);
+}
+
+function copyWorkerCode(){
+  const code=`export default {
+  async fetch(request, env) {
+    if (request.method === 'OPTIONS') {
+      return new Response(null, { headers: {
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Methods': 'POST, OPTIONS',
+        'Access-Control-Allow-Headers': 'Content-Type',
+      }});
+    }
+    const body = await request.json();
+    const resp = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': '${localStorage.getItem('anthropic_key')||'ВСТАВЬТЕ_СЮДА_API_KEY'}',
+        'anthropic-version': '2023-06-01',
+      },
+      body: JSON.stringify(body),
+    });
+    const data = await resp.json();
+    return new Response(JSON.stringify(data), { headers: {
+      'Content-Type': 'application/json',
+      'Access-Control-Allow-Origin': '*',
+    }});
+  }
+};`;
+  navigator.clipboard.writeText(code).then(()=>alert('Код скопирован! Вставьте в Cloudflare Worker.\n\nНе забудьте заменить ВСТАВЬТЕ_СЮДА_API_KEY на ваш ключ от Anthropic (console.anthropic.com)'));
+}
+
+function initOKKAI(){
+  // Show only for director and okk
+  const block=document.getElementById('okk-ai-block');
+  if(!block)return;
+  if(CU&&(CU.role==='director'||CU.role==='okk')){
+    block.style.display='block';
+    document.getElementById('okk-ai-month-label').textContent=getPrevMonthLabel();
+    // Auto-run on 1st of month
+    const today=new Date().getDate();
+    const cacheKey=getOKKAICacheKey();
+    const cached=localStorage.getItem(cacheKey);
+    if(cached){document.getElementById('okk-ai-result').innerHTML=cached;}
+    else if(today===1){runOKKAI(false);}
+  } else {
+    block.style.display='none';
+  }
+}
+
+function renderOKKZonesChart(){
+  const allChecks=db.okk||[];
+  const zoneAvgs=OKK_ZONES.map(z=>{
+    const vals=allChecks.map(c=>OKK_SCORE_MAP[c[z]]).filter(v=>v!==undefined);
+    const avg=vals.length?Math.round(vals.reduce((a,b)=>a+b,0)/vals.length*10)/10:null;
+    return{z,avg};
+  });
+  const maxV=10;
+  const html=zoneAvgs.map(({z,avg})=>{
+    const pct=avg?Math.round(avg/maxV*100):0;
+    const col=avg>=8.5?'var(--green)':avg&&avg>=7?'var(--orange)':'var(--red)';
+    return`<div style="margin-bottom:10px">
+      <div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:4px">
+        <span style="color:var(--text2)">${OKK_ZONE_LABELS[z]}</span>
+        <span style="color:${col};font-family:'IBM Plex Mono',monospace;font-weight:600">${avg??'—'}</span>
+      </div>
+      <div style="height:6px;background:var(--border);border-radius:3px">
+        <div style="height:100%;width:${pct}%;background:${col};border-radius:3px;transition:.3s"></div>
+      </div>
+    </div>`;
+  }).join('');
+  document.getElementById('okk-zones-chart').innerHTML=html;
+}
+
+function renderOKK(){
+  loadOKKSample();
+  const days=parseInt(document.getElementById('okk-period').value)||30;
+  const allChecks=db.okk||[];
+  const cutoff=new Date();cutoff.setDate(cutoff.getDate()-days);
+  const periodChecks=allChecks.filter(c=>new Date(c.date)>=cutoff);
+  const allScores=periodChecks.map(c=>okkScore(c)).filter(s=>s!==null);
+  const avgAll=allScores.length?Math.round(allScores.reduce((a,b)=>a+b,0)/allScores.length*10)/10:null;
+
+  // KPI
+  const objsWithStats=db.objects.map(o=>({o,s30:okkObjectStats(o.id,30),s90:okkObjectStats(o.id,90)}));
+  const redCount=objsWithStats.filter(({s30})=>s30!==null&&s30<7).length;
+  const yellowCount=objsWithStats.filter(({s30})=>s30!==null&&s30>=7&&s30<8.5).length;
+  const noDataCount=db.objects.filter(o=>!allChecks.some(c=>c.objId===o.id)).length;
+
+  document.getElementById('okk-kpi').innerHTML=`
+    <div class="stat-card"><div class="sc-icon">📊</div><div class="sc-val">${avgAll??'—'}</div><div class="sc-lbl">Средний балл</div></div>
+    <div class="stat-card"><div class="sc-icon">🔍</div><div class="sc-val">${periodChecks.length}</div><div class="sc-lbl">Проверок за период</div></div>
+    <div class="stat-card" style="border-top:2px solid var(--red)"><div class="sc-icon">🔴</div><div class="sc-val" style="color:var(--red)">${redCount}</div><div class="sc-lbl">Красная зона</div></div>
+    <div class="stat-card" style="border-top:2px solid var(--orange)"><div class="sc-icon">🟡</div><div class="sc-val" style="color:var(--orange)">${yellowCount}</div><div class="sc-lbl">Жёлтая зона</div></div>
+    <div class="stat-card" style="border-top:2px solid var(--text3)"><div class="sc-icon">⚠️</div><div class="sc-val" style="color:var(--text3)">${noDataCount}</div><div class="sc-lbl">Нет проверок</div></div>
+  `;
+
+  // Risk table
+  const now=new Date();
+  const prevCutoff=new Date();prevCutoff.setDate(prevCutoff.getDate()-60);
+  const midCutoff=new Date();midCutoff.setDate(midCutoff.getDate()-30);
+
+  const rows=db.objects.map(o=>{
+    const s30=okkObjectStats(o.id,30);
+    const s90=okkObjectStats(o.id,90);
+    const zone=okkZone(s30);
+    const lastCheck=allChecks.filter(c=>c.objId===o.id).sort((a,b)=>new Date(b.date)-new Date(a.date))[0];
+    const lastScore=lastCheck?okkScore(lastCheck):null;
+    const checkCount=allChecks.filter(c=>c.objId===o.id&&new Date(c.date)>=cutoff).length;
+
+    // Динамика: текущий 30 дн vs предыдущие 30 дн
+    const prevChecks=allChecks.filter(c=>c.objId===o.id&&new Date(c.date)>=prevCutoff&&new Date(c.date)<midCutoff);
+    const prevScores=prevChecks.map(c=>okkScore(c)).filter(s=>s!==null);
+    const prevAvg=prevScores.length?Math.round(prevScores.reduce((a,b)=>a+b,0)/prevScores.length*10)/10:null;
+    let dynHtml='<span style="color:var(--text3)">—</span>';
+    if(s30!==null&&prevAvg!==null){
+      const d=Math.round((s30-prevAvg)*10)/10;
+      const col=d>=0?'var(--green)':d<-1?'var(--red)':'var(--orange)';
+      dynHtml=`<span style="color:${col};font-family:'IBM Plex Mono',monospace">${d>0?'+':''}${d}</span>`;
+    }
+
+    // Main problem zone
+    let mainProb='—';
+    if(lastCheck){
+      const zoneScores=OKK_ZONES.map(z=>({z,v:OKK_SCORE_MAP[lastCheck[z]]||10}));
+      const worst=zoneScores.sort((a,b)=>a.v-b.v)[0];
+      if(worst.v<9)mainProb=OKK_ZONE_LABELS[worst.z];
+    }
+
+    const rowColor=zone==='red'?'rgba(255,87,87,.06)':zone==='yellow'?'rgba(255,179,71,.04)':'';
+    return`<tr style="background:${rowColor};cursor:pointer" onclick="showOKKDetail(${o.id})">
+      <td><span class="tcell" style="color:var(--accent)">${o.name}</span></td>
+      <td>${o.city||'—'}</td>
+      <td style="color:var(--text2)">${o.mgr||'—'}</td>
+      <td style="font-family:'IBM Plex Mono',monospace;font-size:11px">${lastCheck?`${lastCheck.date} · <b>${lastScore}</b>`:'Нет данных'}</td>
+      <td style="font-family:'IBM Plex Mono',monospace;font-weight:700;color:${s30!==null?okkZone(s30)==='red'?'var(--red)':okkZone(s30)==='yellow'?'var(--orange)':'var(--green)':'var(--text3)'}">${s30??'—'}</td>
+      <td style="font-family:'IBM Plex Mono',monospace;color:var(--text2)">${s90??'—'}</td>
+      <td>${dynHtml}</td>
+      <td style="text-align:center">${checkCount}</td>
+      <td style="font-size:11px;color:var(--text3)">${mainProb}</td>
+      <td>${okkBadge(zone)}</td>
+    </tr>`;
+  }).join('');
+  document.getElementById('okk-risk-tbody').innerHTML=rows||'<tr><td colspan="10" style="text-align:center;color:var(--text3);padding:20px">Нет объектов</td></tr>';
+
+  renderOKKDynChart();
+  renderOKKZonesChart();
+  initOKKAI();
+  document.getElementById('okk-detail').style.display='none';
+}
+
+function showOKKDetail(objId){
+  const o=obi(objId);if(!o)return;
+  const checks=(db.okk||[]).filter(c=>c.objId===objId).sort((a,b)=>new Date(b.date)-new Date(a.date));
+  const s30=okkObjectStats(objId,30);
+  const s90=okkObjectStats(objId,90);
+  const empCount=db.employees.filter(e=>e.objId===objId).length;
+
+  // Info block
+  document.getElementById('okk-det-info').innerHTML=`
+    <div class="ib-title">${o.name}</div>
+    <div style="padding:16px">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px">
+        <div><div style="font-size:10px;color:var(--text3)">Адрес</div><div style="font-size:12px;color:var(--text2)">${o.addr||'—'}</div></div>
+        <div><div style="font-size:10px;color:var(--text3)">Менеджер</div><div style="font-size:12px;color:var(--text2)">${o.mgr||'—'}</div></div>
+        <div><div style="font-size:10px;color:var(--text3)">Сотрудников</div><div style="font-size:12px;color:var(--text2)">${empCount}</div></div>
+        <div><div style="font-size:10px;color:var(--text3)">Статус зоны</div><div style="margin-top:2px">${okkBadge(okkZone(s30))}</div></div>
+      </div>
+      <div style="display:flex;gap:20px;padding:12px;background:var(--surface2);border-radius:var(--r)">
+        <div style="text-align:center"><div style="font-size:22px;font-weight:700;font-family:'IBM Plex Mono',monospace;color:var(--accent)">${s30??'—'}</div><div style="font-size:10px;color:var(--text3)">Балл 30 дн.</div></div>
+        <div style="text-align:center"><div style="font-size:22px;font-weight:700;font-family:'IBM Plex Mono',monospace;color:var(--text2)">${s90??'—'}</div><div style="font-size:10px;color:var(--text3)">Балл 90 дн.</div></div>
+        <div style="text-align:center"><div style="font-size:22px;font-weight:700;font-family:'IBM Plex Mono',monospace;color:var(--text2)">${checks.length}</div><div style="font-size:10px;color:var(--text3)">Всего проверок</div></div>
+      </div>
+    </div>`;
+
+  // Mini chart
+  const last12=checks.slice(0,12).reverse();
+  const maxScore=10;
+  const detBars=last12.map(c=>{
+    const sc=okkScore(c);if(sc===null)return'';
+    const h=Math.round(sc/maxScore*100);
+    const col=sc>=8.5?'var(--green)':sc>=7?'var(--orange)':'var(--red)';
+    return`<div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:2px" title="${c.date}: ${sc}">
+      <div style="font-size:9px;color:var(--text3)">${sc}</div>
+      <div style="height:${h}%;min-height:4px;width:80%;border-radius:2px 2px 0 0;background:${col}"></div>
+    </div>`;
+  }).join('');
+  document.getElementById('okk-det-chart').innerHTML=detBars||'<div style="color:var(--text3);font-size:12px;margin:auto">Нет данных</div>';
+
+  // Checks table
+  const checkRows=checks.slice(0,10).map(c=>{
+    const sc=okkScore(c);
+    const col=sc>=8.5?'var(--green)':sc&&sc>=7?'var(--orange)':'var(--red)';
+    return`<tr>
+      <td style="font-family:'IBM Plex Mono',monospace;font-size:11px">${c.date}</td>
+      <td>${OKK_TYPE_LABELS[c.type]||c.type}</td>
+      <td style="font-weight:700;color:${col};font-family:'IBM Plex Mono',monospace">${sc??'—'}</td>
+      <td style="font-size:11px;color:var(--text2)">${c.comment||'—'}</td>
+      <td style="font-size:11px;color:var(--text3)">${c.inspector||'—'}</td>
+      <td>${c.photo?`<a href="${c.photo}" target="_blank" style="color:var(--accent2);font-size:11px">📷 Фото</a>`:'—'}</td>
+    </tr>`;
+  }).join('');
+  document.getElementById('okk-det-checks').innerHTML=checkRows||'<tr><td colspan="6" style="text-align:center;color:var(--text3)">Нет проверок</td></tr>';
+
+  // Zone bars
+  const allObjChecks=(db.okk||[]).filter(c=>c.objId===objId);
+  const zoneHtml=OKK_ZONES.map(z=>{
+    const vals=allObjChecks.map(c=>OKK_SCORE_MAP[c[z]]).filter(v=>v!==undefined);
+    const avg=vals.length?Math.round(vals.reduce((a,b)=>a+b,0)/vals.length*10)/10:null;
+    const pct=avg?Math.round(avg/10*100):0;
+    const col=avg>=8.5?'var(--green)':avg&&avg>=7?'var(--orange)':'var(--red)';
+    return`<div style="margin-bottom:10px">
+      <div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:4px">
+        <span style="color:var(--text2)">${OKK_ZONE_LABELS[z]}</span>
+        <span style="color:${col};font-weight:600;font-family:'IBM Plex Mono',monospace">${avg??'—'}</span>
+      </div>
+      <div style="height:6px;background:var(--border);border-radius:3px">
+        <div style="height:100%;width:${pct}%;background:${col};border-radius:3px"></div>
+      </div>
+    </div>`;
+  }).join('');
+  document.getElementById('okk-det-zones').innerHTML=zoneHtml;
+
+  document.getElementById('okk-detail').style.display='block';
+  document.getElementById('okk-detail').scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+function closeOKKDetail(){
+  document.getElementById('okk-detail').style.display='none';
+}
+
+function syncOKK(){
+  const url=localStorage.getItem('gs_url_okk');
+  if(!url){alert('Сначала укажите URL Google Sheets ОКК в Настройках');showPage('settings');return;}
+  fetch(url+'?sheet=Проверки').then(r=>r.json()).then(data=>{
+    if(data&&data.rows){db.okk=data.rows;saveDB();renderOKK();alert('✅ Данные ОКК обновлены');}
+  }).catch(()=>alert('Ошибка подключения. Проверьте URL в Настройках.'));
+}
+
+// ════ GOOGLE SHEETS SETTINGS ════
+function saveGSUrls(){
+  const fields=['objects','staff','finance','okk'];
+  let hasWrong=false;
+  fields.forEach(f=>{
+    const val=document.getElementById('gs-url-'+f)?.value.trim();
+    if(val){
+      // Detect wrong URL (spreadsheet link instead of Apps Script)
+      if(val.includes('docs.google.com/spreadsheets') || val.includes('/edit') || val.includes('#gid=')){
+        hasWrong=true;
+      } else {
+        localStorage.setItem('gs_url_'+f,val);
+      }
+    }
+  });
+  if(hasWrong){
+    document.getElementById('gs-status').innerHTML=`
+      <span style="color:var(--red)">❌ Обнаружена неправильная ссылка!</span><br>
+      <span style="color:var(--text3);font-size:11px">
+        Вы вставили ссылку на таблицу Google Sheets.<br>
+        Нужна ссылка на <b>Apps Script</b> — она выглядит так:<br>
+        <code style="color:var(--accent)">https://script.google.com/macros/s/.../exec</code><br><br>
+        Как получить: откройте таблицу → Расширения → Apps Script → Развернуть → Новое развёртывание → Веб-приложение → скопируйте URL
+      </span>`;
+  } else {
+    document.getElementById('gs-status').innerHTML='<span style="color:var(--green)">✅ URL сохранены</span>';
+  }
+}
+
+function testGSConnection(){
+  const fields=['objects','staff','finance','okk'];
+  const statusEl=document.getElementById('gs-status');
+  statusEl.innerHTML='<span style="color:var(--accent2)">🔄 Проверка...</span>';
+  let results=[];
+  let done=0;
+  fields.forEach(f=>{
+    const rawUrl=localStorage.getItem('gs_url_'+f)||document.getElementById('gs-url-'+f)?.value.trim();
+    const name={objects:'ALPHA_Объекты',staff:'ALPHA_Персонал',finance:'ALPHA_Финансы',okk:'ALPHA_ОКК'}[f];
+    if(!rawUrl){
+      results.push(`<span style="color:var(--text3)">— ${name}: не указан</span>`);
+      done++; if(done===fields.length)statusEl.innerHTML=results.join('<br>'); return;
+    }
+    // Detect wrong URL type
+    if(rawUrl.includes('docs.google.com/spreadsheets')){
+      results.push(`<span style="color:var(--red)">❌ ${name}: неправильный тип ссылки (нужен Apps Script URL)</span>`);
+      done++; if(done===fields.length)statusEl.innerHTML=results.join('<br>'); return;
+    }
+    fetch(rawUrl+'?test=1').then(r=>{
+      if(r.ok) results.push(`<span style="color:var(--green)">✅ ${name}: подключено</span>`);
+      else results.push(`<span style="color:var(--red)">✕ ${name}: ошибка (${r.status})</span>`);
+    }).catch(()=>{
+      results.push(`<span style="color:var(--red)">✕ ${name}: ошибка подключения</span>`);
+    }).finally(()=>{done++;if(done===fields.length)statusEl.innerHTML=results.join('<br>');});
+  });
+}
+
+function syncAllSheets(){
+  const statusEl=document.getElementById('gs-status');
+  const fields=['objects','staff','finance','okk'];
+  const urls={};
+  fields.forEach(f=>{urls[f]=localStorage.getItem('gs_url_'+f);});
+  if(!Object.values(urls).some(u=>u)){
+    statusEl.innerHTML='<span style="color:var(--text3)">Сначала укажите URL Apps Script в полях выше</span>';
+    return;
+  }
+  statusEl.innerHTML='<span style="color:var(--accent2)">🔄 Синхронизация...</span>';
+  let done=0; let results=[];
+  fields.forEach(f=>{
+    if(!urls[f]){done++;if(done===fields.length)statusEl.innerHTML=results.join('<br>');return;}
+    fetch(urls[f]+'?sync=1').then(r=>r.json()).then(data=>{
+      results.push(`<span style="color:var(--green)">✅ ${f}: получено ${data.rows?.length||0} строк</span>`);
+      if(data.rows){
+        if(f==='okk'){db.okk=data.rows;}
+        else if(f==='objects'&&data.rows.length)db.objects=data.rows;
+        else if(f==='staff'&&data.rows.length)db.employees=data.rows;
+        saveDB();
+      }
+    }).catch(()=>{
+      results.push(`<span style="color:var(--red)">✕ ${f}: ошибка</span>`);
+    }).finally(()=>{done++;if(done===fields.length){statusEl.innerHTML=results.join('<br>');}});
+  });
+}
+
+// Load saved URLs on settings page
+function loadGSUrls(){
+  ['objects','staff','finance','okk'].forEach(f=>{
+    const el=document.getElementById('gs-url-'+f);
+    const saved=localStorage.getItem('gs_url_'+f);
+    if(el&&saved)el.value=saved;
+  });
+}
+
+// Patch renderSettings to load saved GS URLs
+const _origRenderSettings=renderSettings;
+window.renderSettings=function(){_origRenderSettings();setTimeout(loadGSUrls,50);};
+
+// ════ IMPORT PROCUREMENT ════
+let importData=[];
+function previewImport(){
+  const url=document.getElementById('imp-url').value.trim();
+  if(!url){alert('Вставьте ссылку на CSV');return;}
+  document.getElementById('imp-preview').style.display='block';
+  document.getElementById('imp-preview-body').textContent='Загрузка...';
+  fetch(url).then(r=>r.text()).then(csv=>{
+    const lines=csv.split('\n').slice(0,8).map(l=>l.split(',').slice(0,4).join(' | ')).join('\n');
+    document.getElementById('imp-preview-body').textContent=lines||'Данные не найдены';
+    importData=csv.split('\n').slice(1).filter(l=>l.trim());
+  }).catch(()=>{
+    document.getElementById('imp-preview-body').textContent='Ошибка загрузки. Проверьте что таблица опубликована как CSV и доступна публично.';
+  });
+}
+function confirmImport(){
+  if(!importData.length){alert('Сначала нажмите "Просмотр" и убедитесь что данные загружены');return;}
+  const month=document.getElementById('imp-month').value;
+  let count=0;
+  importData.forEach(line=>{
+    const cols=line.split(',');
+    const name=(cols[0]||'').replace(/"/g,'').trim();
+    const amount=parseInt((cols[1]||'').replace(/[^0-9]/g,''))||0;
+    if(name&&amount){
+      db.procurement.push({id:nid(db.procurement),name,cat:'other',month,amount,sup:'Импорт',objId:null,note:'Импорт из Google Sheets'});
+      count++;
+    }
+  });
+  saveDB();closeM('importProc');renderProcurement();
+  alert(`✅ Импортировано ${count} позиций`);
+  importData=[];
+}
+
+// ════ INIT ════
+loadDB();
+if(!db.users||!db.users.length)db.users=DEFAULT_USERS.map(u=>({...u}));
+if(!db.okk)db.okk=[];
+</script>
+<div class="linechart-tooltip" id="lc-tooltip"></div>
+</body>
+</html>
